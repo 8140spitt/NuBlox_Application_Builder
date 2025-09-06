@@ -1,0 +1,46 @@
+{
+  "name": "@nublox/design-system",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": true,
+  "main": "dist/index.css",
+  "style": "dist/index.css",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "package.json"
+  ],
+  "exports": {
+    ".": "./dist/index.css",
+    "./css/nublox-design-system.css": "./dist/index.css",
+    "./css/tokens.css": "./dist/tokens.css",
+    "./css/base.css": "./dist/base.css",
+    "./css/typography.css": "./dist/typography.css",
+    "./css/utilities.css": "./dist/utilities.css",
+    "./css/components.css": "./dist/components.css",
+    "./css/motion.css": "./dist/motion.css",
+    "./css/themes.css": "./dist/semantic.css",
+    "./css/print.css": "./dist/print.css",
+    "./tokens/tokens.json": "./tokens/tokens.json"
+  },
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build:css": "pnpm dlx postcss-cli \"src/**/*.css\" --base src --dir dist --config postcss.config.cjs",
+    "build:index": "pnpm dlx postcss-cli src/index.css -o dist/index.css --config postcss.config.cjs",
+    "build:copy": "mkdir -p dist/tokens && cp -R src/tokens/* dist/tokens/ 2>/dev/null || true",
+    "build": "pnpm run clean && pnpm run build:css && pnpm run build:index && pnpm run build:copy"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "chokidar-cli": "^3",
+    "cssnano": "^6",
+    "postcss": "^8.5.6",
+    "postcss-cli": "^11.0.1",
+    "postcss-import": "^16.1.1",
+    "postcss-nesting": "^12.1.5",
+    "rimraf": "^5",
+    "shx": "^0.3.4"
+  }
+}

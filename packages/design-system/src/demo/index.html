@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NuBlox Design System — Demo</title>
+  <link rel="stylesheet" href="../css/nublox-design-system.css">
+  <style>@layer components{.hero{padding:var(--space-8) 0;}}</style>
+</head>
+<body>
+  <nav class="nav">
+    <strong>NuBlox DS</strong>
+    <a href="#" aria-current="page">Overview</a>
+    <a href="#typography">Typography</a>
+    <a href="#components">Components</a>
+    <span class="cluster" style="margin-left:auto">
+      <label class="sr-only" for="theme">Theme</label>
+      <select id="theme" class="select" style="height:2rem;padding-inline:.5rem">
+        <option value="">Auto</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+      </select>
+      <label class="sr-only" for="density">Density</label>
+      <select id="density" class="select" style="height:2rem;padding-inline:.5rem">
+        <option value="cozy">Cozy</option>
+        <option value="compact">Compact</option>
+        <option value="comfortable">Comfortable</option>
+      </select>
+    </span>
+  </nav>
+
+  <header class="hero container">
+    <h1 class="mb-4">World‑Class Design System</h1>
+    <p class="muted">Progressive colours, fluid type, accessible components — production ready.</p>
+    <div class="cluster mt-4">
+      <button class="btn btn-primary">Primary</button>
+      <button class="btn btn-outline">Outline</button>
+      <button class="btn btn-ghost">Ghost</button>
+      <span class="badge success">Success</span>
+      <span class="badge warning">Warning</span>
+      <span class="badge danger">Danger</span>
+    </div>
+  </header>
+
+  <main class="container stack">
+    <section id="typography" class="card">
+      <h2 class="card-title">Typography</h2>
+      <p>Body text uses a fluid scale. <strong>Strong</strong>, <em>emphasis</em>, and <code>inline code</code>.</p>
+      <h3>Headings</h3>
+      <h1>H1 Heading</h1>
+      <h2>H2 Heading</h2>
+      <h3>H3 Heading</h3>
+      <h4>H4 Heading</h4>
+      <h5>H5 Heading</h5>
+      <h6>H6 Heading</h6>
+      <p><small>Small and muted text for fine print.</small></p>
+    </section>
+
+    <section id="components" class="grid auto-fit">
+      <div class="card">
+        <h3 class="card-title">Form controls</h3>
+        <div class="stack">
+          <div class="field">
+            <label class="label">Email</label>
+            <input class="input" type="email" placeholder="you@nublox.app">
+            <p class="help">We'll never share your email.</p>
+          </div>
+          <div class="field">
+            <label class="label">Message</label>
+            <textarea class="textarea" placeholder="Tell us more…"></textarea>
+          </div>
+          <div class="cluster">
+            <label><input type="checkbox" class="checkbox"> Subscribe</label>
+            <label><input type="radio" name="r" class="radio"> Option A</label>
+            <label><input type="radio" name="r" class="radio"> Option B</label>
+          </div>
+          <div class="cluster">
+            <button class="btn btn-primary">Submit</button>
+            <button class="btn btn-outline">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title">Table & Alerts</h3>
+        <table class="table">
+          <thead><tr><th>Name</th><th>Status</th><th>Role</th></tr></thead>
+          <tbody>
+            <tr><td>Stephen</td><td><span class="badge success">Active</span></td><td>Admin</td></tr>
+            <tr><td>Alex</td><td><span class="badge warning">Pending</span></td><td>Editor</td></tr>
+            <tr><td>Casey</td><td><span class="badge danger">Locked</span></td><td>Viewer</td></tr>
+          </tbody>
+        </table>
+        <div class="stack mt-4">
+          <div class="alert info">Informational note using tokenized borders.</div>
+          <div class="alert success">Success! Everything looks great.</div>
+          <div class="alert warning">Heads up — check your inputs.</div>
+          <div class="alert danger">Something went wrong.</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const root = document.documentElement;
+    const theme = document.getElementById('theme');
+    const density = document.getElementById('density');
+    theme.addEventListener('change', () => {
+      const v = theme.value;
+      if (!v) root.removeAttribute('data-theme'); else root.setAttribute('data-theme', v);
+      localStorage.setItem('ds-theme', v || '');
+    });
+    density.addEventListener('change', () => {
+      const v = density.value;
+      root.setAttribute('data-density', v);
+      localStorage.setItem('ds-density', v);
+    });
+    // Restore
+    const t = localStorage.getItem('ds-theme');
+    if (t) { theme.value = t; root.setAttribute('data-theme', t); }
+    const d = localStorage.getItem('ds-density') || 'cozy';
+    density.value = d; root.setAttribute('data-density', d);
+  </script>
+</body>
+</html>

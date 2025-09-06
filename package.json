@@ -1,0 +1,28 @@
+{
+  "name": "nublox",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build:packages": "pnpm -r --filter './packages/*' run build",
+    "dev:studio": "pnpm -C apps/studio dev",
+    "dev:marketing": "pnpm -C apps/marketing dev",
+    "dev": "pnpm run build:packages && pnpm -r --parallel --filter './apps/*' dev",
+    "build": "pnpm run build:packages && pnpm -r --filter './apps/*' build",
+    "check": "pnpm -r --filter './apps/*' check"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "postcss-cli": "^11.0.1",
+    "postcss-import": "^16.1.1",
+    "postcss-nesting": "^12.1.5"
+  }
+}
