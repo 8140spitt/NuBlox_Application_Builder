@@ -170,6 +170,11 @@ export const actions: Actions = {
 
         // success
         await createSession(cookies, userId, { remember: true });
-        throw redirect(303, next);
+        const ws = await db.query<{ slug: string }>(
+            `SELECT slug FROM workspaces WHERE owner_id=? AND deleted_at IS NULL ORDER BY created_at ASC LIMIT 1`,
+            [userId]
+        );
+        const slug = ws[0]?.slug;
+        throw redirect(303, slug ? `/workspace/${slug}` : '/onboarding');
     }
 };
