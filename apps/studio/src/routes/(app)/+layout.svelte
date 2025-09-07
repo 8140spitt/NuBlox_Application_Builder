@@ -2,12 +2,14 @@
 	let { data, children } = $props();
 </script>
 
-{#if data.user}
-	<form method="POST" action="/logout" style="display:inline">
-		<button type="submit">Logout</button>
-	</form>
-{/if}
+{#if data.user}{/if}
 <main class="global-wrapper__app">
+	<header class="global-header__app">
+		<form method="POST" action="/logout" style="display:inline">
+			<button type="submit">Logout</button>
+		</form>
+	</header>
+
 	{@render children()}
 </main>
 
@@ -16,7 +18,6 @@
 		position: fixed;
 		inset: 0;
 		display: grid;
-		align-content: center;
-		z-index: -100;
+		grid-template-rows: auto 1fr;
 	}
 </style>
