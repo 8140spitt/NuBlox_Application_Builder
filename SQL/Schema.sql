@@ -2228,25 +2228,6 @@ CREATE UNIQUE INDEX `uq_workspace_member` ON `workspace_members` (`workspace_id`
 
 CREATE INDEX `idx_wsmem_uid` ON `workspace_members` (`user_id` ASC) VISIBLE;
 
--- add password_hash to users if missing
-ALTER TABLE users
-  ADD COLUMN password_hash varchar(255) NULL AFTER username;
-
--- sessions table
-CREATE TABLE IF NOT EXISTS sessions (
-  id          char(64)     NOT NULL PRIMARY KEY,      -- hex token
-  user_id     bigint       NOT NULL,
-  created_at  timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  expires_at  timestamp    NOT NULL,
-  ip          varchar(64)  NULL,
-  user_agent  varchar(255) NULL,
-  KEY idx_sessions_user (user_id),
-  KEY idx_sessions_exp (expires_at),
-  CONSTRAINT fk_sessions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-
-
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
