@@ -38,9 +38,10 @@
 		"vitest-browser-svelte": "^0.1.0"
 	},
 	"dependencies": {
-		"@nublox/validate": "workspace:*",
 		"@nublox/auth": "workspace:*",
 		"@nublox/db": "workspace:*",
-		"@nublox/design-system": "workspace:*"
+		"@nublox/design-system": "workspace:*",
+		"@nublox/sqlx": "workspace:*",
+		"@nublox/validate": "workspace:*"
 	}
 }
