@@ -1,22 +1,30 @@
-// apps/studio/src/routes/api/sql/run/+server.ts
-import type { RequestHandler } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 import { json, error } from '@sveltejs/kit';
-import { registerMySQL, connect } from '@nublox/sqlx';
+import { getDB } from '$lib/server/sqlx';
 
-registerMySQL();
+const READ_ONLY = new Set(['SELECT', 'SHOW', 'DESCRIBE', 'EXPLAIN', 'WITH']);
 
-const DSN = process.env.SQLX_DSN; // e.g. "mysql://user:pass@127.0.0.1:3306/db"
+function sqlKind(raw: string): string {
+    const s = raw
+        .replace(/\/\*[\s\S]*?\*\//g, '')      // block comments
+        .replace(/^\s*--.*$/gm, '')            // line comments
+        .trim();
+    const m = s.match(/^([a-z]+)/i);
+    return m ? m[1].toUpperCase() : '';
+}
 
-export const POST: RequestHandler = async ({ request, locals }) => {
-    if (!DSN) throw error(500, 'SQLX_DSN not configured on server');
-
-    // Optionally tie access to authenticated users:
-    // if (!locals.user) throw error(401, 'Unauthorized');
-
+export const POST: RequestHandler = async ({ request /*, locals */ }) => {
     const { sql, params, mode } = await request.json().catch(() => ({}));
     if (typeof sql !== 'string' || !sql.trim()) throw error(400, 'Missing SQL');
 
-    const db = await connect(DSN);
+    // if (!locals.user) throw error(401, 'Unauthorized'); // plug in your auth later
+
+    const kind = sqlKind(sql);
+    if (mode !== 'exec' && !READ_ONLY.has(kind)) {
+        throw error(400, `Only read-only statements allowed in query mode (got ${kind || 'unknown'})`);
+    }
+
+    const db = await getDB();
     try {
         if (mode === 'exec') {
             const res = await db.exec(sql, Array.isArray(params) ? params : []);
@@ -26,9 +34,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
             return json({ ok: true, result: res });
         }
     } catch (e: any) {
-        // Never leak DSN; return structured error
         return json({ ok: false, error: e?.message ?? String(e) }, { status: 400 });
-    } finally {
-        await db.close();
     }
 };
