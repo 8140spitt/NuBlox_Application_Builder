@@ -1,13 +1,5 @@
-export type Column = {
-    name: string;
-    type: string;
-    null?: boolean;
-    default?: string;
-    extra?: string;
-};
-export type Table = {
-    name: string;
-    columns: Column[];
-    pk?: string[];
-};
-export declare function createTableSql(t: Table): string;
+export * from './core/types.js';
+export * from './core/registry.js';
+export { mysqlProvider } from './mysql/provider.js';
+/** Convenience helper to register the MySQL provider once at app bootstrap. */
+export declare function registerMySQL(): void;

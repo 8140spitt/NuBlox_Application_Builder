@@ -1,0 +1,21 @@
+import type { SQLDialect, DialectProvider } from './types.js';
+declare class ProviderRegistry {
+    #private;
+    register(provider: DialectProvider): void;
+    has(d: SQLDialect): boolean;
+    get(d: SQLDialect): DialectProvider | undefined;
+    list(): SQLDialect[];
+}
+export declare const registry: ProviderRegistry;
+export declare function registerProvider(p: DialectProvider): void;
+export declare function hasProvider(d: SQLDialect): boolean;
+export declare function getProvider(d: SQLDialect): DialectProvider | undefined;
+export declare function requireProvider(d: SQLDialect): DialectProvider;
+export type ConnectionConfig = URL | string | Record<string, any>;
+export declare function inferDialectFromUrlOrConfig(urlOrCfg: ConnectionConfig): SQLDialect | null;
+export declare function normalizeConfig(urlOrCfg: ConnectionConfig, fallbackDialect?: SQLDialect): {
+    dialect: SQLDialect;
+    config: ConnectionConfig;
+};
+export declare function connect(urlOrCfg: ConnectionConfig, fallbackDialect?: SQLDialect): Promise<import("./types.js").SQLClient>;
+export {};

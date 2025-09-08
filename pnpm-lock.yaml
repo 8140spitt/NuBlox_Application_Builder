@@ -229,12 +229,16 @@ importers:
         version: 0.3.4
 
   packages/sqlx:
+    dependencies:
+      mysql2:
+        specifier: ^3.14.3
+        version: 3.14.3
     devDependencies:
       '@types/node':
-        specifier: ^20.11.30
+        specifier: ^20.19.11
         version: 20.19.11
       typescript:
-        specifier: ^5.5.4
+        specifier: ^5.9.2
         version: 5.9.2
 
   packages/validate:
