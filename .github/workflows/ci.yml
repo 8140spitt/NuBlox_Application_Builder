@@ -1,0 +1,32 @@
+name: ci
+on:
+  push: { branches: [ main ] }
+  pull_request: { branches: [ main ] }
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: password
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -ppassword --silent"
+          --health-interval=5s --health-timeout=2s --health-retries=20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r build
+      - name: Prepare DB
+        run: |
+          sudo apt-get update && sudo apt-get install -y mysql-client
+          mysql -h 127.0.0.1 -P 3306 -uroot -ppassword -e "CREATE DATABASE IF NOT EXISTS sqlx_smoketest"
+      - name: Integration tests (node:test)
+        env:
+          SQLX_TEST_URL: mysql://root:password@127.0.0.1:3306/sqlx_smoketest
+        run: node --test packages/sqlx/test/*.test.js
