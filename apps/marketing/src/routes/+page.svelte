@@ -193,7 +193,7 @@
 				will love it.
 			</p>
 			<div class="cta-row">
-				<a class="btn" href="/signup">Get Started</a>
+				<a class="btn" href="http://localhost:5174/register">Get Started</a>
 				<a class="btn ghost" href="/docs">Read the Docs</a>
 			</div>
 		</div>
