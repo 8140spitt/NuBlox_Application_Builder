@@ -8,7 +8,7 @@ SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
 
 DROP SCHEMA IF EXISTS `platform`;
-DROP SCHEMA IF EXISTS `sql`;
+DROP SCHEMA IF EXISTS `sqlx`;
 DROP SCHEMA IF EXISTS `api`;
 DROP SCHEMA IF EXISTS `ui`;
 DROP SCHEMA IF EXISTS `workflow`;
@@ -16,7 +16,7 @@ DROP SCHEMA IF EXISTS `devops`;
 
 -- Schemas
 CREATE SCHEMA IF NOT EXISTS `platform`  DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
-CREATE SCHEMA IF NOT EXISTS `sql`       DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+CREATE SCHEMA IF NOT EXISTS `sqlx`       DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 CREATE SCHEMA IF NOT EXISTS `api`       DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 CREATE SCHEMA IF NOT EXISTS `ui`        DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 CREATE SCHEMA IF NOT EXISTS `workflow`  DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
@@ -851,7 +851,7 @@ CREATE TABLE IF NOT EXISTS workflow.webhooks (
 -- =======================
 -- SQL (NuBlox SQL Studio)
 -- =======================
-CREATE TABLE IF NOT EXISTS sql.connections (
+CREATE TABLE IF NOT EXISTS sqlx.connections (
   id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   name            VARCHAR(190) NOT NULL,
   host            VARCHAR(255) NOT NULL,
@@ -869,7 +869,7 @@ CREATE TABLE IF NOT EXISTS sql.connections (
   KEY idx_dbc_host_port (host, port)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS sql.roles (
+CREATE TABLE IF NOT EXISTS sqlx.roles (
   id        BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   name      VARCHAR(190) NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -877,7 +877,7 @@ CREATE TABLE IF NOT EXISTS sql.roles (
   UNIQUE KEY uq_db_role_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS sql.users (
+CREATE TABLE IF NOT EXISTS sqlx.users (
   id               BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   db_connection_id BIGINT UNSIGNED NOT NULL,
   username         VARCHAR(190) NOT NULL,
@@ -889,10 +889,10 @@ CREATE TABLE IF NOT EXISTS sql.users (
   PRIMARY KEY (id),
   UNIQUE KEY uq_dbu_user_per_conn (db_connection_id, username, deleted_at),
   KEY idx_dbu_cid (db_connection_id),
-  CONSTRAINT fk_dbu_cid FOREIGN KEY (db_connection_id) REFERENCES sql.connections(id)
+  CONSTRAINT fk_dbu_cid FOREIGN KEY (db_connection_id) REFERENCES sqlx.connections(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS sql.role_assignments (
+CREATE TABLE IF NOT EXISTS sqlx.role_assignments (
   id         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   db_user_id BIGINT UNSIGNED NOT NULL,
   db_role_id BIGINT UNSIGNED NOT NULL,
@@ -901,11 +901,11 @@ CREATE TABLE IF NOT EXISTS sql.role_assignments (
   UNIQUE KEY uq_role_assignment (db_user_id, db_role_id),
   KEY idx_dbra_user (db_user_id),
   KEY idx_dbra_role (db_role_id),
-  CONSTRAINT fk_dbra_user FOREIGN KEY (db_user_id) REFERENCES sql.users(id) ON DELETE CASCADE,
-  CONSTRAINT fk_dbra_role FOREIGN KEY (db_role_id) REFERENCES sql.roles(id) ON DELETE CASCADE
+  CONSTRAINT fk_dbra_user FOREIGN KEY (db_user_id) REFERENCES sqlx.users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_dbra_role FOREIGN KEY (db_role_id) REFERENCES sqlx.roles(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS sql.privileges (
+CREATE TABLE IF NOT EXISTS sqlx.privileges (
   id         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   user_name  VARCHAR(190) NOT NULL,
   privilege  VARCHAR(190) NOT NULL,
@@ -916,7 +916,7 @@ CREATE TABLE IF NOT EXISTS sql.privileges (
   KEY idx_dbp_table (table_name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS sql.schemas (
+CREATE TABLE IF NOT EXISTS sqlx.schemas (
   id               BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   db_connection_id BIGINT UNSIGNED NOT NULL,
   name             VARCHAR(190) NOT NULL,
@@ -926,10 +926,10 @@ CREATE TABLE IF NOT EXISTS sql.schemas (
   PRIMARY KEY (id),
   UNIQUE KEY uq_schema_per_conn (db_connection_id, name, deleted_at),
   KEY idx_dbsch_cid (db_connection_id),
-  CONSTRAINT fk_dbsch_cid FOREIGN KEY (db_connection_id) REFERENCES sql.connections(id)
+  CONSTRAINT fk_dbsch_cid FOREIGN KEY (db_connection_id) REFERENCES sqlx.connections(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS sql.schema_exports (
+CREATE TABLE IF NOT EXISTS sqlx.schema_exports (
   id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   db_schema_id BIGINT UNSIGNED NOT NULL,
   format       ENUM('sql','json','yaml','xml','png','svg') NOT NULL,
@@ -938,10 +938,10 @@ CREATE TABLE IF NOT EXISTS sql.schema_exports (
   exported_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   KEY idx_dbsex_schema (db_schema_id),
-  CONSTRAINT fk_dbsex_schema FOREIGN KEY (db_schema_id) REFERENCES sql.schemas(id)
+  CONSTRAINT fk_dbsex_schema FOREIGN KEY (db_schema_id) REFERENCES sqlx.schemas(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS sql.schema_procedures (
+CREATE TABLE IF NOT EXISTS sqlx.schema_procedures (
   id            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   db_schema_id  BIGINT UNSIGNED NOT NULL,
   name          VARCHAR(190) NOT NULL,
@@ -952,10 +952,10 @@ CREATE TABLE IF NOT EXISTS sql.schema_procedures (
   PRIMARY KEY (id),
   UNIQUE KEY uq_proc_per_schema (db_schema_id, name, deleted_at),
   KEY idx_dbproc_sid (db_schema_id),
-  CONSTRAINT fk_dbproc_sid FOREIGN KEY (db_schema_id) REFERENCES sql.schemas(id)
+  CONSTRAINT fk_dbproc_sid FOREIGN KEY (db_schema_id) REFERENCES sqlx.schemas(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS sql.schema_tables (
+CREATE TABLE IF NOT EXISTS sqlx.schema_tables (
   id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   db_schema_id BIGINT UNSIGNED NOT NULL,
   name         VARCHAR(190) NOT NULL,
@@ -965,10 +965,10 @@ CREATE TABLE IF NOT EXISTS sql.schema_tables (
   PRIMARY KEY (id),
   UNIQUE KEY uq_table_per_schema (db_schema_id, name, deleted_at),
   KEY idx_dbtab_sid (db_schema_id),
-  CONSTRAINT fk_dbtab_sid FOREIGN KEY (db_schema_id) REFERENCES sql.schemas(id)
+  CONSTRAINT fk_dbtab_sid FOREIGN KEY (db_schema_id) REFERENCES sqlx.schemas(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS sql.schema_table_columns (
+CREATE TABLE IF NOT EXISTS sqlx.schema_table_columns (
   id                 BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   db_schema_table_id BIGINT UNSIGNED NOT NULL,
   name               VARCHAR(190) NOT NULL,
@@ -992,10 +992,10 @@ CREATE TABLE IF NOT EXISTS sql.schema_table_columns (
   UNIQUE KEY uq_col_per_table (db_schema_table_id, name, deleted_at),
   KEY idx_dbcol_tid (db_schema_table_id),
   KEY idx_dbcol_ord (db_schema_table_id, ordinal_position),
-  CONSTRAINT fk_dbcol_tid FOREIGN KEY (db_schema_table_id) REFERENCES sql.schema_tables(id)
+  CONSTRAINT fk_dbcol_tid FOREIGN KEY (db_schema_table_id) REFERENCES sqlx.schema_tables(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS sql.schema_table_indexes (
+CREATE TABLE IF NOT EXISTS sqlx.schema_table_indexes (
   id                 BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   db_schema_table_id BIGINT UNSIGNED NOT NULL,
   name               VARCHAR(190) NOT NULL,
@@ -1007,10 +1007,10 @@ CREATE TABLE IF NOT EXISTS sql.schema_table_indexes (
   PRIMARY KEY (id),
   UNIQUE KEY uq_idx_per_table (db_schema_table_id, name, deleted_at),
   KEY idx_dbidx_tid (db_schema_table_id),
-  CONSTRAINT fk_dbidx_tid FOREIGN KEY (db_schema_table_id) REFERENCES sql.schema_tables(id)
+  CONSTRAINT fk_dbidx_tid FOREIGN KEY (db_schema_table_id) REFERENCES sqlx.schema_tables(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS sql.schema_table_checks (
+CREATE TABLE IF NOT EXISTS sqlx.schema_table_checks (
   id                 BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   db_schema_table_id BIGINT UNSIGNED NOT NULL,
   name               VARCHAR(190) NOT NULL,
@@ -1021,10 +1021,10 @@ CREATE TABLE IF NOT EXISTS sql.schema_table_checks (
   PRIMARY KEY (id),
   UNIQUE KEY uq_chk_per_table (db_schema_table_id, name, deleted_at),
   KEY idx_dbchk_tid (db_schema_table_id),
-  CONSTRAINT fk_dbchk_tid FOREIGN KEY (db_schema_table_id) REFERENCES sql.schema_tables(id)
+  CONSTRAINT fk_dbchk_tid FOREIGN KEY (db_schema_table_id) REFERENCES sqlx.schema_tables(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS sql.schema_table_foreign_keys (
+CREATE TABLE IF NOT EXISTS sqlx.schema_table_foreign_keys (
   id                 BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   db_schema_table_id BIGINT UNSIGNED NOT NULL,
   name               VARCHAR(190) NOT NULL,
@@ -1039,10 +1039,10 @@ CREATE TABLE IF NOT EXISTS sql.schema_table_foreign_keys (
   PRIMARY KEY (id),
   UNIQUE KEY uq_fk_per_table (db_schema_table_id, name, deleted_at),
   KEY idx_dbfk_tid (db_schema_table_id),
-  CONSTRAINT fk_dbfk_tid FOREIGN KEY (db_schema_table_id) REFERENCES sql.schema_tables(id)
+  CONSTRAINT fk_dbfk_tid FOREIGN KEY (db_schema_table_id) REFERENCES sqlx.schema_tables(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS sql.schema_table_triggers (
+CREATE TABLE IF NOT EXISTS sqlx.schema_table_triggers (
   id                 BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   db_schema_table_id BIGINT UNSIGNED NOT NULL,
   name               VARCHAR(190) NOT NULL,
@@ -1055,10 +1055,10 @@ CREATE TABLE IF NOT EXISTS sql.schema_table_triggers (
   PRIMARY KEY (id),
   UNIQUE KEY uq_trg_per_table (db_schema_table_id, name, deleted_at),
   KEY idx_dbtrg_tid (db_schema_table_id),
-  CONSTRAINT fk_dbtrg_tid FOREIGN KEY (db_schema_table_id) REFERENCES sql.schema_tables(id)
+  CONSTRAINT fk_dbtrg_tid FOREIGN KEY (db_schema_table_id) REFERENCES sqlx.schema_tables(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS sql.schema_views (
+CREATE TABLE IF NOT EXISTS sqlx.schema_views (
   id            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   db_schema_id  BIGINT UNSIGNED NOT NULL,
   name          VARCHAR(190) NOT NULL,
@@ -1069,20 +1069,20 @@ CREATE TABLE IF NOT EXISTS sql.schema_views (
   PRIMARY KEY (id),
   UNIQUE KEY uq_view_per_schema (db_schema_id, name, deleted_at),
   KEY idx_dbview_sid (db_schema_id),
-  CONSTRAINT fk_dbview_sid FOREIGN KEY (db_schema_id) REFERENCES sql.schemas(id)
+  CONSTRAINT fk_dbview_sid FOREIGN KEY (db_schema_id) REFERENCES sqlx.schemas(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS sql.query_logs (
+CREATE TABLE IF NOT EXISTS sqlx.query_logs (
   id               BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   db_connection_id BIGINT UNSIGNED NOT NULL,
   query_sql        LONGTEXT NOT NULL,
   created_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   KEY idx_dbql_conn_created (db_connection_id, created_at),
-  CONSTRAINT fk_dbql_conn FOREIGN KEY (db_connection_id) REFERENCES sql.connections(id)
+  CONSTRAINT fk_dbql_conn FOREIGN KEY (db_connection_id) REFERENCES sqlx.connections(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS sql.query_results (
+CREATE TABLE IF NOT EXISTS sqlx.query_results (
   id               BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   db_connection_id BIGINT UNSIGNED NOT NULL,
   query_sql        LONGTEXT NOT NULL,
@@ -1090,30 +1090,30 @@ CREATE TABLE IF NOT EXISTS sql.query_results (
   created_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   KEY idx_dbqr_conn_created (db_connection_id, created_at),
-  CONSTRAINT fk_dbqr_conn FOREIGN KEY (db_connection_id) REFERENCES sql.connections(id)
+  CONSTRAINT fk_dbqr_conn FOREIGN KEY (db_connection_id) REFERENCES sqlx.connections(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS sql.query_errors (
+CREATE TABLE IF NOT EXISTS sqlx.query_errors (
   id               BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   db_connection_id BIGINT UNSIGNED NOT NULL,
   error_message    TEXT NOT NULL,
   created_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   KEY idx_dbqe_conn_created (db_connection_id, created_at),
-  CONSTRAINT fk_dbqe_conn FOREIGN KEY (db_connection_id) REFERENCES sql.connections(id)
+  CONSTRAINT fk_dbqe_conn FOREIGN KEY (db_connection_id) REFERENCES sqlx.connections(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS sql.connection_errors (
+CREATE TABLE IF NOT EXISTS sqlx.connection_errors (
   id               BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   db_connection_id BIGINT UNSIGNED NOT NULL,
   error_message    TEXT NOT NULL,
   created_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   KEY idx_dbce_cid_created (db_connection_id, created_at),
-  CONSTRAINT fk_dbce_cid FOREIGN KEY (db_connection_id) REFERENCES sql.connections(id)
+  CONSTRAINT fk_dbce_cid FOREIGN KEY (db_connection_id) REFERENCES sqlx.connections(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS sql.data_sources (
+CREATE TABLE IF NOT EXISTS sqlx.data_sources (
   id            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   project_id    BIGINT UNSIGNED NOT NULL,
   name          VARCHAR(190) NOT NULL,
@@ -1129,7 +1129,7 @@ CREATE TABLE IF NOT EXISTS sql.data_sources (
   CONSTRAINT fk_ds_proj FOREIGN KEY (project_id) REFERENCES platform.projects(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS sql.saved_queries (
+CREATE TABLE IF NOT EXISTS sqlx.saved_queries (
   id               BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   project_id       BIGINT UNSIGNED NOT NULL,
   db_connection_id BIGINT UNSIGNED NOT NULL,
@@ -1143,12 +1143,12 @@ CREATE TABLE IF NOT EXISTS sql.saved_queries (
   KEY idx_sq_proj (project_id),
   KEY idx_sq_conn (db_connection_id),
   KEY idx_sq_user (created_by),
-  CONSTRAINT fk_sq_conn FOREIGN KEY (db_connection_id) REFERENCES sql.connections(id),
+  CONSTRAINT fk_sq_conn FOREIGN KEY (db_connection_id) REFERENCES sqlx.connections(id),
   CONSTRAINT fk_sq_proj FOREIGN KEY (project_id)      REFERENCES platform.projects(id),
   CONSTRAINT fk_sq_user FOREIGN KEY (created_by)      REFERENCES platform.users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS sql.saved_views (
+CREATE TABLE IF NOT EXISTS sqlx.saved_views (
   id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   project_id  BIGINT UNSIGNED NOT NULL,
   name        VARCHAR(190) NOT NULL,
@@ -1163,7 +1163,7 @@ CREATE TABLE IF NOT EXISTS sql.saved_views (
   CONSTRAINT fk_sv_user FOREIGN KEY (created_by) REFERENCES platform.users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS sql.data_exports (
+CREATE TABLE IF NOT EXISTS sqlx.data_exports (
   id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   project_id  BIGINT UNSIGNED NOT NULL,
   format      ENUM('csv','xlsx','json') NOT NULL,
@@ -1176,11 +1176,11 @@ CREATE TABLE IF NOT EXISTS sql.data_exports (
   KEY idx_de_user (created_by),
   KEY idx_de_query (query_ref),
   CONSTRAINT fk_de_proj  FOREIGN KEY (project_id) REFERENCES platform.projects(id),
-  CONSTRAINT fk_de_query FOREIGN KEY (query_ref)  REFERENCES sql.saved_queries(id),
+  CONSTRAINT fk_de_query FOREIGN KEY (query_ref)  REFERENCES sqlx.saved_queries(id),
   CONSTRAINT fk_de_user  FOREIGN KEY (created_by) REFERENCES platform.users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS sql.data_imports (
+CREATE TABLE IF NOT EXISTS sqlx.data_imports (
   id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   project_id   BIGINT UNSIGNED NOT NULL,
   source_type  ENUM('csv','xlsx','json','api') NOT NULL,
@@ -1197,7 +1197,7 @@ CREATE TABLE IF NOT EXISTS sql.data_imports (
   CONSTRAINT fk_di_user FOREIGN KEY (created_by) REFERENCES platform.users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS sql.table_rows (
+CREATE TABLE IF NOT EXISTS sqlx.table_rows (
   id                 BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   db_schema_table_id BIGINT UNSIGNED NOT NULL,
   data_json          JSON NOT NULL,
@@ -1206,10 +1206,10 @@ CREATE TABLE IF NOT EXISTS sql.table_rows (
   deleted_at         TIMESTAMP NULL DEFAULT NULL,
   PRIMARY KEY (id),
   KEY idx_dbrow_tid_created (db_schema_table_id, created_at),
-  CONSTRAINT fk_dbrow_tid FOREIGN KEY (db_schema_table_id) REFERENCES sql.schema_tables(id)
+  CONSTRAINT fk_dbrow_tid FOREIGN KEY (db_schema_table_id) REFERENCES sqlx.schema_tables(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS sql.user_activity (
+CREATE TABLE IF NOT EXISTS sqlx.user_activity (
   id               BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   db_user_id       BIGINT UNSIGNED NOT NULL,
   db_connection_id BIGINT UNSIGNED NOT NULL,
@@ -1219,11 +1219,11 @@ CREATE TABLE IF NOT EXISTS sql.user_activity (
   PRIMARY KEY (id),
   KEY idx_dbuact_user (db_user_id),
   KEY idx_dbuact_conn_created (db_connection_id, created_at),
-  CONSTRAINT fk_dbuact_user FOREIGN KEY (db_user_id) REFERENCES sql.users(id),
-  CONSTRAINT fk_dbuact_conn FOREIGN KEY (db_connection_id) REFERENCES sql.connections(id)
+  CONSTRAINT fk_dbuact_user FOREIGN KEY (db_user_id) REFERENCES sqlx.users(id),
+  CONSTRAINT fk_dbuact_conn FOREIGN KEY (db_connection_id) REFERENCES sqlx.connections(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS sql.user_permissions (
+CREATE TABLE IF NOT EXISTS sqlx.user_permissions (
   id               BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   db_user_id       BIGINT UNSIGNED NOT NULL,
   db_connection_id BIGINT UNSIGNED NOT NULL,
@@ -1232,10 +1232,665 @@ CREATE TABLE IF NOT EXISTS sql.user_permissions (
   PRIMARY KEY (id),
   UNIQUE KEY uq_dbup (db_user_id, db_connection_id, permission),
   KEY idx_dbup_cid (db_connection_id),
-  CONSTRAINT fk_dbup_uid FOREIGN KEY (db_user_id) REFERENCES sql.users(id),
-  CONSTRAINT fk_dbup_cid FOREIGN KEY (db_connection_id) REFERENCES sql.connections(id)
+  CONSTRAINT fk_dbup_uid FOREIGN KEY (db_user_id) REFERENCES sqlx.users(id),
+  CONSTRAINT fk_dbup_cid FOREIGN KEY (db_connection_id) REFERENCES sqlx.connections(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+SET SQL_MODE=@OLD_SQL_MODE;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
+
+-- NuBlox platform patch: JSON types, soft-delete uniques, FKs with CASCADE,
+-- precision timestamps, schema defaults, and pragmatic indexes.
+
+SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
+SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
+SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
+
+-- -------------------------------------------------------------------
+-- 0) Ensure schema defaults
+-- -------------------------------------------------------------------
+ALTER SCHEMA platform
+  DEFAULT CHARACTER SET utf8mb4
+  DEFAULT COLLATE utf8mb4_0900_ai_ci;
+
+-- -------------------------------------------------------------------
+-- 1) Convert LONGTEXT JSON-ish columns to proper JSON
+--    (Will fail if rows contain invalid JSON)
+-- -------------------------------------------------------------------
+ALTER TABLE platform.api_endpoints                  MODIFY config_json        JSON NOT NULL;
+ALTER TABLE platform.notification_events            MODIFY payload_json       JSON NOT NULL;
+ALTER TABLE platform.saved_views                    MODIFY config_json        JSON NOT NULL;
+ALTER TABLE platform.ui_components_library          MODIFY definition_json    JSON NOT NULL;
+ALTER TABLE platform.ui_page_versions               MODIFY tree_json          JSON NOT NULL;
+ALTER TABLE platform.workflow_versions              MODIFY graph_json         JSON NOT NULL;
+ALTER TABLE platform.data_sources                   MODIFY config_json        JSON NOT NULL;
+
+ALTER TABLE platform.db_query_results               MODIFY result_json        JSON NOT NULL;
+
+ALTER TABLE platform.workflow_run_nodes             MODIFY output_json        JSON NULL;
+
+ALTER TABLE platform.api_request_logs
+  MODIFY req_headers_json  JSON NULL,
+  MODIFY req_body_json     JSON NULL,
+  MODIFY res_headers_json  JSON NULL,
+  MODIFY res_body_json     JSON NULL;
+
+-- These were already JSON in your base schema (kept as-is, listed for clarity):
+-- platform.api_policies.role_requirements, platform.api_policies.cors_json,
+-- platform.api_keys.scopes_json, platform.audit_events.metadata_json,
+-- platform.db_user_activity.activity_details
+
+-- -------------------------------------------------------------------
+-- 2) Soft-delete aware uniques for slugs (re-usable names after delete)
+-- -------------------------------------------------------------------
+-- Workspaces
+ALTER TABLE platform.workspaces
+  ADD COLUMN is_deleted TINYINT(1) AS (deleted_at IS NOT NULL) STORED;
+-- replace unique index on slug
+DROP INDEX uq_workspace_slug ON platform.workspaces;
+CREATE UNIQUE INDEX uq_workspace_slug_active ON platform.workspaces (slug, is_deleted);
+
+-- Projects
+ALTER TABLE platform.projects
+  ADD COLUMN is_deleted TINYINT(1) AS (deleted_at IS NOT NULL) STORED;
+-- replace unique index on (workspace_id, slug)
+DROP INDEX uq_project_slug ON platform.projects;
+CREATE UNIQUE INDEX uq_project_slug_active ON platform.projects (workspace_id, slug, is_deleted);
+
+-- -------------------------------------------------------------------
+-- 3) Precision timestamps on hot event tables
+-- -------------------------------------------------------------------
+ALTER TABLE platform.api_request_logs
+  MODIFY created_at TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6);
+
+-- (Optional but recommended for timelines)
+ALTER TABLE platform.workflow_runs
+  MODIFY started_at  TIMESTAMP(6) NULL DEFAULT NULL,
+  MODIFY finished_at TIMESTAMP(6) NULL DEFAULT NULL,
+  MODIFY created_at  TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6);
+
+ALTER TABLE platform.notification_deliveries
+  MODIFY created_at  TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6);
+
+-- -------------------------------------------------------------------
+-- 4) Rebuild FKs with explicit ON DELETE behavior
+--     (CASCADE where rows are strictly children; SET NULL where nullable)
+-- -------------------------------------------------------------------
+
+-- api_collections → projects
+ALTER TABLE platform.api_collections
+  DROP FOREIGN KEY fk_api_coll_proj,
+  ADD CONSTRAINT fk_api_coll_proj
+    FOREIGN KEY (project_id) REFERENCES platform.projects(id)
+    ON DELETE CASCADE;
+
+-- api_endpoints → projects / collections
+ALTER TABLE platform.api_endpoints
+  DROP FOREIGN KEY fk_api_ep_proj,
+  DROP FOREIGN KEY fk_api_ep_coll,
+  ADD CONSTRAINT fk_api_ep_proj
+    FOREIGN KEY (project_id) REFERENCES platform.projects(id)
+    ON DELETE CASCADE,
+  ADD CONSTRAINT fk_api_ep_coll
+    FOREIGN KEY (collection_id) REFERENCES platform.api_collections(id)
+    ON DELETE SET NULL;
+
+-- api_policies → endpoints
+ALTER TABLE platform.api_policies
+  DROP FOREIGN KEY fk_api_policy_ep,
+  ADD CONSTRAINT fk_api_policy_ep
+    FOREIGN KEY (endpoint_id) REFERENCES platform.api_endpoints(id)
+    ON DELETE CASCADE;
+
+-- environments → projects
+ALTER TABLE platform.environments
+  DROP FOREIGN KEY fk_env_project,
+  ADD CONSTRAINT fk_env_project
+    FOREIGN KEY (project_id) REFERENCES platform.projects(id)
+    ON DELETE CASCADE;
+
+-- api_request_logs → endpoints / environments
+ALTER TABLE platform.api_request_logs
+  DROP FOREIGN KEY fk_api_log_ep,
+  DROP FOREIGN KEY fk_api_log_env,
+  ADD CONSTRAINT fk_api_log_ep
+    FOREIGN KEY (endpoint_id) REFERENCES platform.api_endpoints(id)
+    ON DELETE CASCADE,
+  ADD CONSTRAINT fk_api_log_env
+    FOREIGN KEY (environment_id) REFERENCES platform.environments(id)
+    ON DELETE SET NULL;
+
+-- api_tests → collections
+ALTER TABLE platform.api_tests
+  DROP FOREIGN KEY fk_api_test_coll,
+  ADD CONSTRAINT fk_api_test_coll
+    FOREIGN KEY (collection_id) REFERENCES platform.api_collections(id)
+    ON DELETE CASCADE;
+
+-- audit_events → workspaces / users
+ALTER TABLE platform.audit_events
+  DROP FOREIGN KEY fk_audit_ws,
+  DROP FOREIGN KEY fk_audit_user,
+  ADD CONSTRAINT fk_audit_ws
+    FOREIGN KEY (workspace_id) REFERENCES platform.workspaces(id)
+    ON DELETE CASCADE,
+  ADD CONSTRAINT fk_audit_user
+    FOREIGN KEY (actor_user_id) REFERENCES platform.users(id)
+    ON DELETE SET NULL;
+
+-- builds → projects / users
+ALTER TABLE platform.builds
+  DROP FOREIGN KEY fk_build_proj,
+  DROP FOREIGN KEY fk_build_user,
+  ADD CONSTRAINT fk_build_proj
+    FOREIGN KEY (project_id) REFERENCES platform.projects(id)
+    ON DELETE CASCADE,
+  ADD CONSTRAINT fk_build_user
+    FOREIGN KEY (created_by) REFERENCES platform.users(id)
+    ON DELETE SET NULL;
+
+-- saved_queries → connections / projects / users
+ALTER TABLE platform.saved_queries
+  DROP FOREIGN KEY fk_sq_conn,
+  DROP FOREIGN KEY fk_sq_proj,
+  DROP FOREIGN KEY fk_sq_user,
+  ADD CONSTRAINT fk_sq_conn
+    FOREIGN KEY (db_connection_id) REFERENCES platform.db_connections(id)
+    ON DELETE CASCADE,
+  ADD CONSTRAINT fk_sq_proj
+    FOREIGN KEY (project_id) REFERENCES platform.projects(id)
+    ON DELETE CASCADE,
+  ADD CONSTRAINT fk_sq_user
+    FOREIGN KEY (created_by) REFERENCES platform.users(id)
+    ON DELETE SET NULL;
+
+-- data_exports → projects / queries / users
+ALTER TABLE platform.data_exports
+  DROP FOREIGN KEY fk_de_proj,
+  DROP FOREIGN KEY fk_de_query,
+  DROP FOREIGN KEY fk_de_user,
+  ADD CONSTRAINT fk_de_proj
+    FOREIGN KEY (project_id) REFERENCES platform.projects(id)
+    ON DELETE CASCADE,
+  ADD CONSTRAINT fk_de_query
+    FOREIGN KEY (query_ref) REFERENCES platform.saved_queries(id)
+    ON DELETE SET NULL,
+  ADD CONSTRAINT fk_de_user
+    FOREIGN KEY (created_by) REFERENCES platform.users(id)
+    ON DELETE SET NULL;
+
+-- data_imports → projects / users
+ALTER TABLE platform.data_imports
+  DROP FOREIGN KEY fk_di_proj,
+  DROP FOREIGN KEY fk_di_user,
+  ADD CONSTRAINT fk_di_proj
+    FOREIGN KEY (project_id) REFERENCES platform.projects(id)
+    ON DELETE CASCADE,
+  ADD CONSTRAINT fk_di_user
+    FOREIGN KEY (created_by) REFERENCES platform.users(id)
+    ON DELETE SET NULL;
+
+-- data_sources → projects
+ALTER TABLE platform.data_sources
+  DROP FOREIGN KEY fk_ds_proj,
+  ADD CONSTRAINT fk_ds_proj
+    FOREIGN KEY (project_id) REFERENCES platform.projects(id)
+    ON DELETE CASCADE;
+
+-- db connection related
+ALTER TABLE platform.db_connection_errors
+  DROP FOREIGN KEY fk_dbce_cid,
+  ADD CONSTRAINT fk_dbce_cid
+    FOREIGN KEY (db_connection_id) REFERENCES platform.db_connections(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE platform.db_query_errors
+  DROP FOREIGN KEY fk_dbqe_conn,
+  ADD CONSTRAINT fk_dbqe_conn
+    FOREIGN KEY (db_connection_id) REFERENCES platform.db_connections(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE platform.db_query_logs
+  DROP FOREIGN KEY fk_dbql_conn,
+  ADD CONSTRAINT fk_dbql_conn
+    FOREIGN KEY (db_connection_id) REFERENCES platform.db_connections(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE platform.db_query_results
+  DROP FOREIGN KEY fk_dbqr_conn,
+  ADD CONSTRAINT fk_dbqr_conn
+    FOREIGN KEY (db_connection_id) REFERENCES platform.db_connections(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE platform.db_users
+  DROP FOREIGN KEY fk_dbu_cid,
+  ADD CONSTRAINT fk_dbu_cid
+    FOREIGN KEY (db_connection_id) REFERENCES platform.db_connections(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE platform.db_role_assignments
+  DROP FOREIGN KEY fk_dbra_role,
+  DROP FOREIGN KEY fk_dbra_user,
+  ADD CONSTRAINT fk_dbra_role
+    FOREIGN KEY (db_role_id) REFERENCES platform.db_roles(id)
+    ON DELETE CASCADE,
+  ADD CONSTRAINT fk_dbra_user
+    FOREIGN KEY (db_user_id) REFERENCES platform.db_users(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE platform.db_schemas
+  DROP FOREIGN KEY fk_dbsch_cid,
+  ADD CONSTRAINT fk_dbsch_cid
+    FOREIGN KEY (db_connection_id) REFERENCES platform.db_connections(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE platform.db_schema_exports
+  DROP FOREIGN KEY fk_dbsex_schema,
+  ADD CONSTRAINT fk_dbsex_schema
+    FOREIGN KEY (db_schema_id) REFERENCES platform.db_schemas(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE platform.db_schema_procedures
+  DROP FOREIGN KEY fk_dbproc_sid,
+  ADD CONSTRAINT fk_dbproc_sid
+    FOREIGN KEY (db_schema_id) REFERENCES platform.db_schemas(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE platform.db_schema_tables
+  DROP FOREIGN KEY fk_dbtab_sid,
+  ADD CONSTRAINT fk_dbtab_sid
+    FOREIGN KEY (db_schema_id) REFERENCES platform.db_schemas(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE platform.db_schema_table_checks
+  DROP FOREIGN KEY fk_dbchk_tid,
+  ADD CONSTRAINT fk_dbchk_tid
+    FOREIGN KEY (db_schema_table_id) REFERENCES platform.db_schema_tables(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE platform.db_schema_table_columns
+  DROP FOREIGN KEY fk_dbcol_tid,
+  ADD CONSTRAINT fk_dbcol_tid
+    FOREIGN KEY (db_schema_table_id) REFERENCES platform.db_schema_tables(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE platform.db_schema_table_foreign_keys
+  DROP FOREIGN KEY fk_dbfk_tid,
+  ADD CONSTRAINT fk_dbfk_tid
+    FOREIGN KEY (db_schema_table_id) REFERENCES platform.db_schema_tables(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE platform.db_schema_table_indexes
+  DROP FOREIGN KEY fk_dbidx_tid,
+  ADD CONSTRAINT fk_dbidx_tid
+    FOREIGN KEY (db_schema_table_id) REFERENCES platform.db_schema_tables(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE platform.db_schema_table_triggers
+  DROP FOREIGN KEY fk_dbtrg_tid,
+  ADD CONSTRAINT fk_dbtrg_tid
+    FOREIGN KEY (db_schema_table_id) REFERENCES platform.db_schema_tables(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE platform.db_schema_views
+  DROP FOREIGN KEY fk_dbview_sid,
+  ADD CONSTRAINT fk_dbview_sid
+    FOREIGN KEY (db_schema_id) REFERENCES platform.db_schemas(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE platform.db_table_rows
+  DROP FOREIGN KEY fk_dbrow_tid,
+  ADD CONSTRAINT fk_dbrow_tid
+    FOREIGN KEY (db_schema_table_id) REFERENCES platform.db_schema_tables(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE platform.db_user_activity
+  DROP FOREIGN KEY fk_dbuact_conn,
+  DROP FOREIGN KEY fk_dbuact_user,
+  ADD CONSTRAINT fk_dbuact_conn
+    FOREIGN KEY (db_connection_id) REFERENCES platform.db_connections(id)
+    ON DELETE CASCADE,
+  ADD CONSTRAINT fk_dbuact_user
+    FOREIGN KEY (db_user_id) REFERENCES platform.db_users(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE platform.db_user_permissions
+  DROP FOREIGN KEY fk_dbup_cid,
+  DROP FOREIGN KEY fk_dbup_uid,
+  ADD CONSTRAINT fk_dbup_cid
+    FOREIGN KEY (db_connection_id) REFERENCES platform.db_connections(id)
+    ON DELETE CASCADE,
+  ADD CONSTRAINT fk_dbup_uid
+    FOREIGN KEY (db_user_id) REFERENCES platform.db_users(id)
+    ON DELETE CASCADE;
+
+-- deployments → builds / environments
+ALTER TABLE platform.deployments
+  DROP FOREIGN KEY fk_dep_build,
+  DROP FOREIGN KEY fk_dep_env,
+  ADD CONSTRAINT fk_dep_build
+    FOREIGN KEY (build_id) REFERENCES platform.builds(id)
+    ON DELETE CASCADE,
+  ADD CONSTRAINT fk_dep_env
+    FOREIGN KEY (environment_id) REFERENCES platform.environments(id)
+    ON DELETE CASCADE;
+
+-- env_vars → environments
+ALTER TABLE platform.env_vars
+  DROP FOREIGN KEY fk_envvar_env,
+  ADD CONSTRAINT fk_envvar_env
+    FOREIGN KEY (environment_id) REFERENCES platform.environments(id)
+    ON DELETE CASCADE;
+
+-- feature_flags → workspaces
+ALTER TABLE platform.feature_flags
+  DROP FOREIGN KEY fk_ff_ws,
+  ADD CONSTRAINT fk_ff_ws
+    FOREIGN KEY (workspace_id) REFERENCES platform.workspaces(id)
+    ON DELETE CASCADE;
+
+-- subscriptions / invoices
+ALTER TABLE platform.subscriptions
+  DROP FOREIGN KEY fk_sub_ba,
+  DROP FOREIGN KEY fk_sub_plan,
+  ADD CONSTRAINT fk_sub_ba
+    FOREIGN KEY (business_account_id) REFERENCES platform.business_accounts(id)
+    ON DELETE CASCADE,
+  ADD CONSTRAINT fk_sub_plan
+    FOREIGN KEY (plan_id) REFERENCES platform.plans(id)
+    ON DELETE RESTRICT;
+
+ALTER TABLE platform.invoices
+  DROP FOREIGN KEY fk_inv_sub,
+  ADD CONSTRAINT fk_inv_sub
+    FOREIGN KEY (subscription_id) REFERENCES platform.subscriptions(id)
+    ON DELETE CASCADE;
+
+-- locales / translations
+ALTER TABLE platform.locales
+  DROP FOREIGN KEY fk_loc_ws,
+  ADD CONSTRAINT fk_loc_ws
+    FOREIGN KEY (workspace_id) REFERENCES platform.workspaces(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE platform.translations
+  DROP FOREIGN KEY fk_tr_loc,
+  DROP FOREIGN KEY fk_tr_user,
+  DROP FOREIGN KEY fk_tr_ws,
+  ADD CONSTRAINT fk_tr_loc
+    FOREIGN KEY (locale_id) REFERENCES platform.locales(id)
+    ON DELETE CASCADE,
+  ADD CONSTRAINT fk_tr_user
+    FOREIGN KEY (updated_by) REFERENCES platform.users(id)
+    ON DELETE SET NULL,
+  ADD CONSTRAINT fk_tr_ws
+    FOREIGN KEY (workspace_id) REFERENCES platform.workspaces(id)
+    ON DELETE CASCADE;
+
+-- meta/notifications
+ALTER TABLE platform.meta_registry
+  DROP FOREIGN KEY fk_mr_ws,
+  ADD CONSTRAINT fk_mr_ws
+    FOREIGN KEY (workspace_id) REFERENCES platform.workspaces(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE platform.notification_templates
+  DROP FOREIGN KEY fk_nt_ws,
+  ADD CONSTRAINT fk_nt_ws
+    FOREIGN KEY (workspace_id) REFERENCES platform.workspaces(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE platform.notification_events
+  DROP FOREIGN KEY fk_ne_proj,
+  DROP FOREIGN KEY fk_ne_tpl,
+  ADD CONSTRAINT fk_ne_proj
+    FOREIGN KEY (project_id) REFERENCES platform.projects(id)
+    ON DELETE CASCADE,
+  ADD CONSTRAINT fk_ne_tpl
+    FOREIGN KEY (template_id) REFERENCES platform.notification_templates(id)
+    ON DELETE SET NULL;
+
+ALTER TABLE platform.notification_deliveries
+  DROP FOREIGN KEY fk_nd_event,
+  ADD CONSTRAINT fk_nd_event
+    FOREIGN KEY (event_id) REFERENCES platform.notification_events(id)
+    ON DELETE CASCADE;
+
+-- roles/permissions
+ALTER TABLE platform.roles
+  DROP FOREIGN KEY fk_roles_ws,
+  ADD CONSTRAINT fk_roles_ws
+    FOREIGN KEY (workspace_id) REFERENCES platform.workspaces(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE platform.role_permissions
+  DROP FOREIGN KEY fk_rp_perm,
+  DROP FOREIGN KEY fk_rp_role,
+  ADD CONSTRAINT fk_rp_perm
+    FOREIGN KEY (permission_id) REFERENCES platform.permissions(id)
+    ON DELETE CASCADE,
+  ADD CONSTRAINT fk_rp_role
+    FOREIGN KEY (role_id) REFERENCES platform.roles(id)
+    ON DELETE CASCADE;
+
+-- storage
+ALTER TABLE platform.storage_buckets
+  DROP FOREIGN KEY fk_bucket_ws,
+  ADD CONSTRAINT fk_bucket_ws
+    FOREIGN KEY (workspace_id) REFERENCES platform.workspaces(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE platform.storage_objects
+  DROP FOREIGN KEY fk_obj_bucket,
+  DROP FOREIGN KEY fk_obj_user,
+  ADD CONSTRAINT fk_obj_bucket
+    FOREIGN KEY (bucket_id) REFERENCES platform.storage_buckets(id)
+    ON DELETE CASCADE,
+  ADD CONSTRAINT fk_obj_user
+    FOREIGN KEY (created_by) REFERENCES platform.users(id)
+    ON DELETE SET NULL;
+
+-- tasks
+ALTER TABLE platform.tasks
+  DROP FOREIGN KEY fk_tasks_pid,
+  DROP FOREIGN KEY fk_tasks_parent,
+  DROP FOREIGN KEY fk_tasks_aid,
+  ADD CONSTRAINT fk_tasks_pid
+    FOREIGN KEY (project_id) REFERENCES platform.projects(id)
+    ON DELETE CASCADE,
+  ADD CONSTRAINT fk_tasks_parent
+    FOREIGN KEY (parent_id) REFERENCES platform.tasks(id)
+    ON DELETE CASCADE,
+  ADD CONSTRAINT fk_tasks_aid
+    FOREIGN KEY (assignee_id) REFERENCES platform.users(id)
+    ON DELETE SET NULL;
+
+ALTER TABLE platform.task_attachments
+  DROP FOREIGN KEY fk_tatt_tid,
+  DROP FOREIGN KEY fk_tatt_uid,
+  ADD CONSTRAINT fk_tatt_tid
+    FOREIGN KEY (task_id) REFERENCES platform.tasks(id)
+    ON DELETE CASCADE,
+  ADD CONSTRAINT fk_tatt_uid
+    FOREIGN KEY (user_id) REFERENCES platform.users(id)
+    ON DELETE SET NULL;
+
+ALTER TABLE platform.task_comments
+  DROP FOREIGN KEY fk_tcom_tid,
+  DROP FOREIGN KEY fk_tcom_uid,
+  ADD CONSTRAINT fk_tcom_tid
+    FOREIGN KEY (task_id) REFERENCES platform.tasks(id)
+    ON DELETE CASCADE,
+  ADD CONSTRAINT fk_tcom_uid
+    FOREIGN KEY (user_id) REFERENCES platform.users(id)
+    ON DELETE SET NULL;
+
+-- UI assets / pages
+ALTER TABLE platform.ui_assets
+  DROP FOREIGN KEY fk_ui_assets_proj,
+  DROP FOREIGN KEY fk_ui_assets_user,
+  ADD CONSTRAINT fk_ui_assets_proj
+    FOREIGN KEY (project_id) REFERENCES platform.projects(id)
+    ON DELETE CASCADE,
+  ADD CONSTRAINT fk_ui_assets_user
+    FOREIGN KEY (created_by) REFERENCES platform.users(id)
+    ON DELETE SET NULL;
+
+ALTER TABLE platform.ui_components_library
+  DROP FOREIGN KEY fk_ui_clib_proj,
+  ADD CONSTRAINT fk_ui_clib_proj
+    FOREIGN KEY (project_id) REFERENCES platform.projects(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE platform.ui_pages
+  DROP FOREIGN KEY fk_ui_pages_proj,
+  DROP FOREIGN KEY fk_ui_pages_user,
+  ADD CONSTRAINT fk_ui_pages_proj
+    FOREIGN KEY (project_id) REFERENCES platform.projects(id)
+    ON DELETE CASCADE,
+  ADD CONSTRAINT fk_ui_pages_user
+    FOREIGN KEY (created_by) REFERENCES platform.users(id)
+    ON DELETE SET NULL;
+
+ALTER TABLE platform.ui_page_versions
+  DROP FOREIGN KEY fk_ui_pv_page,
+  DROP FOREIGN KEY fk_ui_pv_user,
+  ADD CONSTRAINT fk_ui_pv_page
+    FOREIGN KEY (page_id) REFERENCES platform.ui_pages(id)
+    ON DELETE CASCADE,
+  ADD CONSTRAINT fk_ui_pv_user
+    FOREIGN KEY (created_by) REFERENCES platform.users(id)
+    ON DELETE SET NULL;
+
+-- usage/invoices
+ALTER TABLE platform.usage_records
+  DROP FOREIGN KEY fk_usage_sub,
+  ADD CONSTRAINT fk_usage_sub
+    FOREIGN KEY (subscription_id) REFERENCES platform.subscriptions(id)
+    ON DELETE CASCADE;
+
+-- user-related
+ALTER TABLE platform.user_profiles
+  DROP FOREIGN KEY fk_user_profiles_user,
+  ADD CONSTRAINT fk_user_profiles_user
+    FOREIGN KEY (user_id) REFERENCES platform.users(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE platform.user_roles
+  DROP FOREIGN KEY fk_ur_uid,
+  ADD CONSTRAINT fk_ur_uid
+    FOREIGN KEY (user_id) REFERENCES platform.users(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE platform.user_sessions
+  DROP FOREIGN KEY fk_usess_uid,
+  ADD CONSTRAINT fk_usess_uid
+    FOREIGN KEY (user_id) REFERENCES platform.users(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE platform.user_verifications
+  DROP FOREIGN KEY fk_usver_uid,
+  ADD CONSTRAINT fk_usver_uid
+    FOREIGN KEY (user_id) REFERENCES platform.users(id)
+    ON DELETE CASCADE;
+
+-- workflows
+ALTER TABLE platform.workflows
+  DROP FOREIGN KEY fk_wf_proj,
+  DROP FOREIGN KEY fk_wf_user,
+  ADD CONSTRAINT fk_wf_proj
+    FOREIGN KEY (project_id) REFERENCES platform.projects(id)
+    ON DELETE CASCADE,
+  ADD CONSTRAINT fk_wf_user
+    FOREIGN KEY (created_by) REFERENCES platform.users(id)
+    ON DELETE SET NULL;
+
+ALTER TABLE platform.workflow_runs
+  DROP FOREIGN KEY fk_wfr_wf,
+  ADD CONSTRAINT fk_wfr_wf
+    FOREIGN KEY (workflow_id) REFERENCES platform.workflows(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE platform.workflow_run_nodes
+  DROP FOREIGN KEY fk_wfrn_run,
+  ADD CONSTRAINT fk_wfrn_run
+    FOREIGN KEY (run_id) REFERENCES platform.workflow_runs(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE platform.workflow_triggers
+  DROP FOREIGN KEY fk_wft_wf,
+  ADD CONSTRAINT fk_wft_wf
+    FOREIGN KEY (workflow_id) REFERENCES platform.workflows(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE platform.workflow_versions
+  DROP FOREIGN KEY fk_wfv_wf,
+  DROP FOREIGN KEY fk_wfv_user,
+  ADD CONSTRAINT fk_wfv_wf
+    FOREIGN KEY (workflow_id) REFERENCES platform.workflows(id)
+    ON DELETE CASCADE,
+  ADD CONSTRAINT fk_wfv_user
+    FOREIGN KEY (created_by) REFERENCES platform.users(id)
+    ON DELETE SET NULL;
+
+ALTER TABLE platform.workflow_webhooks
+  DROP FOREIGN KEY fk_wfh_wf,
+  ADD CONSTRAINT fk_wfh_wf
+    FOREIGN KEY (workflow_id) REFERENCES platform.workflows(id)
+    ON DELETE CASCADE;
+
+-- workspace members
+ALTER TABLE platform.workspace_members
+  DROP FOREIGN KEY fk_wsmem_wsid,
+  DROP FOREIGN KEY fk_wsmem_uid,
+  ADD CONSTRAINT fk_wsmem_wsid
+    FOREIGN KEY (workspace_id) REFERENCES platform.workspaces(id)
+    ON DELETE CASCADE,
+  ADD CONSTRAINT fk_wsmem_uid
+    FOREIGN KEY (user_id) REFERENCES platform.users(id)
+    ON DELETE CASCADE;
+
+-- -------------------------------------------------------------------
+-- 5) Pragmatic indexes for common paths
+-- -------------------------------------------------------------------
+-- Saved queries list/search
+CREATE INDEX idx_saved_queries_list
+  ON platform.saved_queries (project_id, name, created_at DESC);
+
+-- UI pages route lookup
+CREATE INDEX idx_ui_pages_route
+  ON platform.ui_pages (project_id, route_path);
+
+-- Workflow run timelines
+CREATE INDEX idx_workflow_runs_timeline
+  ON platform.workflow_runs (workflow_id, created_at DESC);
+
+-- Deployment status by environment
+CREATE INDEX idx_deployments_status
+  ON platform.deployments (environment_id, status, created_at);
+
+-- (Optional) ensure fast actor lookups in audit logs (name already exists in many schemas)
+CREATE INDEX idx_audit_actor
+  ON platform.audit_events (actor_user_id, created_at);
+
+-- -------------------------------------------------------------------
+-- 6) Optional: “active” views that hide soft-deleted rows
+-- -------------------------------------------------------------------
+DROP SCHEMA IF EXISTS platform_v;
+CREATE SCHEMA IF NOT EXISTS platform_v;
+
+DROP VIEW IF EXISTS platform_v.workspaces_active;
+CREATE VIEW platform_v.workspaces_active AS
+  SELECT * FROM platform.workspaces WHERE deleted_at IS NULL;
+
+DROP VIEW IF EXISTS platform_v.projects_active;
+CREATE VIEW platform_v.projects_active AS
+  SELECT * FROM platform.projects WHERE deleted_at IS NULL;
+
+-- -------------------------------------------------------------------
+-- Done
+-- -------------------------------------------------------------------
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
