@@ -1,4 +1,5 @@
-@import "@nublox/design-system"
+@import "@nublox/design-system/css/tokens.css";
+@import "@nublox/design-system/css/nublox-design-system.css";
 
 :root {
     --bg: #0b0d12;

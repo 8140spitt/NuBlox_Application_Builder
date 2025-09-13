@@ -1,9 +1,3 @@
-@layer print {
-  @media print {
-    :root { color-scheme: light only; }
-    body { background: white; color: black; font-size: 12pt; }
-    .nav, .dialog { display: none !important; }
-    .card { box-shadow: none; border-color: #bbb; }
-    a { color: black; text-decoration: underline; }
-  }
+@layer base {
+  @media print{ *{box-shadow:none!important} .btn{border:1px solid #000!important} }
 }

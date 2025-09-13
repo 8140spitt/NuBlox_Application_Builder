@@ -1,0 +1,7 @@
+@layer components {
+  .badge{display:inline-block;border-radius:999px;padding:.15rem .5rem;border:1px solid #0002}
+  .badge--info{background:var(--info-100);color:var(--on-info-100)}
+  .badge--success{background:var(--success-100);color:var(--on-success-100)}
+  .badge--warning{background:var(--warning-100);color:var(--on-warning-100)}
+  .badge--danger{background:var(--danger-100);color:var(--on-danger-100)}
+}

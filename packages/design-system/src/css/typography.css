@@ -1,34 +1,20 @@
-@layer typography {
-  :root {
-    --measure: 65ch;
-  }
-  h1, h2, h3, h4, h5, h6 { font-weight: var(--fw-semibold); line-height: var(--lh-tight); margin: 0 0 var(--space-4); }
-  h1 { font-size: var(--scale-5); letter-spacing: -0.02em; }
-  h2 { font-size: var(--scale-4); letter-spacing: -0.015em; }
-  h3 { font-size: var(--scale-3); }
-  h4 { font-size: var(--scale-2); }
-  h5 { font-size: var(--scale-1); }
-  h6 { font-size: var(--scale-0); text-transform: uppercase; letter-spacing: .08em; }
+@layer base {
+  :root{
+    --font-sans: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
-  p { margin: 0 0 var(--space-4); max-width: var(--measure); }
-  small { font-size: var(--scale--1); color: var(--color-muted); }
-  code, pre, kbd, samp {
-    font-family: var(--font-mono);
-    font-size: 0.95em;
-    background: var(--color-surface-2);
-    padding: 0 .4em;
-    border-radius: var(--radius-1);
+    --size-1: clamp(12px, .75vw, 13px);
+    --size-2: clamp(14px, .9vw, 15px);
+    --size-3: clamp(16px, 1vw, 16px);
+    --size-4: clamp(18px, 1.2vw, 18px);
+    --size-5: clamp(22px, 1.6vw, 22px);
+    --size-6: clamp(28px, 2.2vw, 28px);
+    --size-7: clamp(36px, 3vw, 36px);
   }
-  pre { padding: var(--space-4); overflow: auto; }
-  blockquote {
-    border-inline-start: 4px solid var(--color-border);
-    padding-inline: var(--space-4);
-    margin: var(--space-6) 0;
-    color: var(--color-muted);
-  }
-  hr {
-    border: 0;
-    border-top: 1px solid var(--color-border);
-    margin: var(--space-6) 0;
-  }
+
+  .h1{ font-size: var(--size-7); font-weight: 700; }
+  .h2{ font-size: var(--size-6); font-weight: 700; }
+  .h3{ font-size: var(--size-5); font-weight: 700; }
+  .h4{ font-size: var(--size-4); font-weight: 600; }
+  .mono{font-family: var(--font-mono)}
 }

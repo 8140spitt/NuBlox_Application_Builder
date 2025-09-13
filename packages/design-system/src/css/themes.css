@@ -1,21 +1,70 @@
-@layer themes {
-  /* High contrast preference */
-  @media (prefers-contrast: more) {
-    :root {
-      --color-border: color-mix(in srgb, var(--color-text) 25%, var(--_mix-dark));
-    }
+@layer tokens {
+  :root{
+    --nublox-primary: #a65de9;
+    --nublox-secondary: #47a4ff;
+    --nublox-tertiary: #47ffd7;
+    --nublox-quaternary: #fba94c;
+  }
+}
+@layer base {
+  :root, [data-theme='light']{
+    --primary:   var(--brand1-600); --on-primary:   var(--on-brand1-600);
+    --secondary: var(--brand2-600); --on-secondary: var(--on-brand2-600);
+    --accent:    var(--brand3-600); --on-accent:    var(--on-brand3-600);
+
+    --success: var(--success-600); --on-success: var(--on-success-600);
+    --warning: var(--warning-600); --on-warning: var(--on-warning-600);
+    --danger:  var(--danger-600);  --on-danger:  var(--danger-600);
+
+    --link: var(--brand2-700);
+    --surface:   var(--neutral-50);
+    --surface-2: var(--neutral-100);
+    --text: #111827;
+    --border: color-mix(in oklab, var(--neutral-300), #000 8%);
+  }
+  [data-theme='dark']{
+    --primary:   var(--brand1-400); --on-primary:   var(--on-brand1-400);
+    --secondary: var(--brand2-400); --on-secondary: var(--on-brand2-400);
+    --accent:    var(--brand3-400); --on-accent:    var(--on-brand3-400);
+
+    --success: var(--success-400); --on-success: var(--on-success-400);
+    --warning: var(--warning-400); --on-warning: var(--warning-400);
+    --danger:  var(--danger-400);  --on-danger:  var(--danger-400);
+
+    --link: var(--brand2-300);
+    --surface:   var(--neutral-900);
+    --surface-2: var(--neutral-800);
+    --text: #e5e7eb;
+    --border: color-mix(in oklab, var(--neutral-700), #000 16%);
   }
 
-  /* Forced-colors for Windows High Contrast */
+  :root, [data-theme='light']{
+    --state-hover-delta: 6%;
+    --state-active-delta: 10%;
+    --primary-hover:   color-mix(in oklab, var(--primary),   #000 var(--state-hover-delta));
+    --primary-active:  color-mix(in oklab, var(--primary),   #000 var(--state-active-delta));
+    --secondary-hover: color-mix(in oklab, var(--secondary), #000 var(--state-hover-delta));
+    --secondary-active:color-mix(in oklab, var(--secondary), #000 var(--state-active-delta));
+    --accent-hover:    color-mix(in oklab, var(--accent),    #000 var(--state-hover-delta));
+    --accent-active:   color-mix(in oklab, var(--accent),    #000 var(--state-active-delta));
+  }
+  [data-theme='dark']{
+    --state-hover-delta: 12%;
+    --state-active-delta: 18%;
+    --primary-hover:   color-mix(in oklab, var(--primary),   #000 var(--state-hover-delta));
+    --primary-active:  color-mix(in oklab, var(--primary),   #000 var(--state-active-delta));
+    --secondary-hover: color-mix(in oklab, var(--secondary), #000 var(--state-hover-delta));
+    --secondary-active:color-mix(in oklab, var(--secondary), #000 var(--state-active-delta));
+    --accent-hover:    color-mix(in oklab, var(--accent),    #000 var(--state-hover-delta));
+    --accent-active:   color-mix(in oklab, var(--accent),    #000 var(--state-active-delta));
+  }
+
   @media (forced-colors: active) {
-    :root {
-      --color-bg: Canvas;
-      --color-text: CanvasText;
-      --color-border: GrayText;
-      --color-primary: Highlight;
-      --color-focus: Highlight;
+    :root, [data-theme='light'], [data-theme='dark']{
+      --primary: CanvasText; --on-primary: Canvas;
+      --secondary: Highlight; --on-secondary: Canvas;
+      --accent: CanvasText; --on-accent: Canvas;
+      --border: GrayText;
     }
-    .btn-primary { forced-color-adjust: none; background: Highlight; color: HighlightText; }
-    a { color: LinkText; }
   }
 }

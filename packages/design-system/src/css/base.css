@@ -1,25 +1,21 @@
 @layer base {
-  /* Modern reset */
-  *, *::before, *::after { box-sizing: border-box; }
-  * { min-width: 0; }
-  html, body { height: 100%; }
-  body {
-    margin: 0;
-    font-family: var(--font-sans);
-    font-size: var(--scale-0);
-    line-height: var(--lh-normal);
-    color: var(--color-text);
-    background: var(--color-bg);
-    accent-color: var(--color-primary);
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;font:normal 400 16px/1.5 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif}
+
+  :root,[data-theme='light']{ color: var(--text,#111827); background: var(--surface,#ffffff); }
+  [data-theme='dark']{ color: var(--text,#e5e7eb); background: var(--surface,#0b0e12); }
+
+  :root,[data-theme='light']{
+    --surface: var(--neutral-50);
+    --surface-2: var(--neutral-100);
+    --border: color-mix(in oklab, var(--neutral-300), #000 8%);
+    --overlay: color-mix(in oklab, #000, transparent 85%);
   }
-  img, svg, video, canvas { max-width: 100%; height: auto; }
-  :focus-visible {
-    outline: 2px solid var(--color-focus);
-    outline-offset: 2px;
+  [data-theme='dark']{
+    --surface: var(--neutral-900);
+    --surface-2: var(--neutral-800);
+    --border: color-mix(in oklab, var(--neutral-700), #000 16%);
+    --overlay: color-mix(in oklab, #000, transparent 70%);
   }
-  /* Links */
-  a { color: var(--color-link); text-underline-offset: 2px; }
-  a:hover { text-decoration-thickness: 2px; }
 }

@@ -1,0 +1,25 @@
+@layer components {
+  .btn{
+    --_bg: var(--primary);
+    --_fg: var(--on-primary);
+    --_bg-hover: var(--primary-hover);
+    --_bg-active: var(--primary-active);
+    --_border: color-mix(in oklab, var(--_bg), #000 12%);
+
+    display:inline-flex;align-items:center;gap:.5rem;
+    padding: var(--space-3) var(--space-5);
+    border-radius: var(--radius-md);
+    border:1px solid var(--_border);
+    background: var(--_bg); color: var(--_fg);
+    box-shadow: var(--elev-1);
+    transition: transform var(--dur-1) var(--ease-productive), background var(--dur-1) var(--ease-productive), box-shadow var(--dur-2) var(--ease-productive);
+    cursor:pointer;
+  }
+  .btn:hover { background: var(--_bg-hover); transform: translateY(-1px); }
+  .btn:active { background: var(--_bg-active); transform: translateY(0); box-shadow: var(--elev-0); }
+  .btn:focus-visible { outline: none; box-shadow: var(--elev-1), var(--focus-ring); }
+  .btn:disabled { opacity:.55; cursor:not-allowed; }
+
+  .btn--secondary{ --_bg: var(--secondary); --_fg: var(--on-secondary); --_bg-hover: var(--secondary-hover); --_bg-active: var(--secondary-active); }
+  .btn--accent{ --_bg: var(--accent); --_fg: var(--on-accent); --_bg-hover: var(--accent-hover); --_bg-active: var(--accent-active); }
+}
