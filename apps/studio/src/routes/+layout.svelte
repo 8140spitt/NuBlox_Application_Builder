@@ -1,21 +1,19 @@
 <script>
-	import '../app.css';
-	import favicon from '$lib/assets/favicon.svg';
-	import faviconDark from '$lib/assets/favicon-dark.svg';
-
+	import '@nublox/design-system/dist/index.css';
 	let { data, children } = $props();
 </script>
 
 <svelte:head>
-	<title>NuBloxStudio</title>
-	<meta
-		name="description"
-		content="NuBloxStudio - Your go-to platform for building applications with ease."
-	/>
-
-	<link rel="icon" type="image/x-icon" href="/favicon.ico" />
-	<link rel="icon" type="image/svg+xml" href={faviconDark} />
-	<link rel="icon" type="image/svg+xml" href={favicon} media="(prefers-color-scheme: dark)" />
+	<title>NuBlox Studio</title>
 </svelte:head>
 
-{@render children()}
+<div class="nbx-app">
+	{@render children()}
+</div>
+
+<style>
+	.nbx-app {
+		min-height: 100dvh;
+		display: grid;
+	}
+</style>

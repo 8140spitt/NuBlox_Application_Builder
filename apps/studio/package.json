@@ -42,6 +42,7 @@
 		"@nublox/db": "workspace:*",
 		"@nublox/design-system": "workspace:*",
 		"@nublox/sqlx": "workspace:*",
-		"@nublox/validate": "workspace:*"
+		"@nublox/validate": "workspace:*",
+		"@nublox/platform": "workspace:*"
 	}
 }

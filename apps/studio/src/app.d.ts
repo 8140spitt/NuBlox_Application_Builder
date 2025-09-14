@@ -3,7 +3,15 @@
 declare global {
 	namespace App {
 		// interface Error {}
-		interface Locals { user: { id: number; username: string; status: 'active' | 'inactive' | 'banned' } | null; }
+		interface Locals {
+			sessionId: string | null;
+			user: { id: number; email: string } | null;
+			auth: {
+				signIn(userId: number): Promise<void>;
+				signOut(): Promise<void>;
+			};
+			workspace?: { host: string; workspaceSlug: string | null };
+		}
 		// interface PageData {}
 		// interface PageState {}
 		// interface Platform {}
