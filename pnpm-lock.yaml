@@ -183,12 +183,13 @@ importers:
         version: 0.1.0(@vitest/browser@3.2.4)(svelte@5.38.3)(vitest@3.2.4)
 
   packages/auth:
+    dependencies:
+      '@nublox/validate':
+        specifier: workspace:*
+        version: link:../validate
     devDependencies:
-      '@types/node':
-        specifier: ^20.11.30
-        version: 20.19.11
       typescript:
-        specifier: ^5.5.4
+        specifier: ^5.9.2
         version: 5.9.2
 
   packages/db:
@@ -255,6 +256,15 @@ importers:
 
   packages/platform:
     dependencies:
+      '@nublox/auth':
+        specifier: workspace:*
+        version: link:../auth
+      '@nublox/session-store':
+        specifier: workspace:*
+        version: link:../session-store
+      '@nublox/sqlx':
+        specifier: workspace:*
+        version: link:../sqlx
       '@nublox/validate':
         specifier: workspace:*
         version: link:../validate
@@ -263,11 +273,8 @@ importers:
         version: 9.9.5
     devDependencies:
       '@types/node':
-        specifier: ^20.11.30
-        version: 20.19.11
-      rimraf:
-        specifier: ^6.0.1
-        version: 6.0.1
+        specifier: ^22.5.2
+        version: 22.18.3
       typescript:
         specifier: ^5.9.2
         version: 5.9.2
@@ -281,9 +288,6 @@ importers:
         specifier: workspace:*
         version: link:../sqlx
     devDependencies:
-      rimraf:
-        specifier: ^6.0.1
-        version: 6.0.1
       typescript:
         specifier: ^5.9.2
         version: 5.9.2
@@ -291,12 +295,9 @@ importers:
   packages/sqlx:
     dependencies:
       mysql2:
-        specifier: ^3.14.3
+        specifier: ^3.11.3
         version: 3.14.3
     devDependencies:
-      '@types/node':
-        specifier: ^20.19.11
-        version: 20.19.11
       typescript:
         specifier: ^5.9.2
         version: 5.9.2

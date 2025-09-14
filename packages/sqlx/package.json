@@ -1,8 +1,6 @@
 {
   "name": "@nublox/sqlx",
-  "version": "0.1.1",
-  "description": "NuBlox SQLX — world-class, dialect-agnostic SQL toolkit (MySQL-first).",
-  "license": "MIT",
+  "version": "0.1.0",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -13,23 +11,18 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "package.json"
   ],
+  "sideEffects": false,
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "dev": "tsc -w -p tsconfig.json",
-    "clean": "rm -rf dist",
-    "smoke:mysql": "node ./scripts/mysql-smoke.js"
+    "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "mysql2": "^3.14.3"
+    "mysql2": "^3.11.3"
   },
   "devDependencies": {
-    "@types/node": "^20.19.11",
     "typescript": "^5.9.2"
-  },
-  "engines": {
-    "node": ">=18"
-  },
-  "sideEffects": false
+  }
 }

@@ -2,6 +2,12 @@ import { randomBytes, createHmac } from 'node:crypto';
 
 export type SessionRecord = { id: string; user_id: number; created_at: Date };
 
+export interface SessionStore {
+    create(userId: number): Promise<SessionRecord>;
+    delete(sessionId: string): Promise<void>;
+    get(sessionId: string): Promise<SessionRecord | null>;
+}
+
 export function sign(value: string, secret: string) {
     return createHmac('sha256', secret).update(value).digest('hex');
 }
@@ -21,7 +27,6 @@ export function newSessionId() {
     return randomBytes(18).toString('hex');
 }
 
-// 32 bytes => 64-char hex fits CHAR(64)
 export function newSessionToken() {
     return randomBytes(32).toString('hex');
 }

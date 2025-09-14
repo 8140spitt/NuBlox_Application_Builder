@@ -17,9 +17,7 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "clean": "rimraf dist",
-    "dev": "tsc -w -p tsconfig.json"
+    "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
     "@nublox/validate": "workspace:*",
@@ -30,8 +28,6 @@
   },
   "devDependencies": {
     "typescript": "^5.9.2",
-    "rimraf": "^6.0.1",
-    "@types/node": "^20.11.30"
-  },
-  "packageManager": "pnpm@10.16.1"
+    "@types/node": "^22.5.2"
+  }
 }
