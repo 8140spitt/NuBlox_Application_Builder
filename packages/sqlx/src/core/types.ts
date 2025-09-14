@@ -78,6 +78,7 @@ export interface SQLClient {
   transaction<T>(fn: (tx: SQLTransaction) => Promise<T>, options?: { isolation?: IsolationLevel }): Promise<T>;
   prepare(sql: string): Promise<PreparedStatement>;
   stream<T = RowObject>(sql: string, params?: SQLParams, options?: QueryOptions): AsyncIterable<T>;
+  capabilities(): Promise<CapabilityMatrix>;
   close(): Promise<void>;
 }
 
@@ -100,6 +101,9 @@ export interface ColumnDef {
   isUnique?: boolean;
   ordinalPosition?: number | null;
   comment?: string | null;
+  defaultValue?: SQLValue | null;   // param-safe default (numbers, strings, dates, boolean, null)
+  computedExpr?: string | null;     // expression for computed/generated columns
+  computedStored?: boolean;         // true if computed column is stored (not virtual)
 }
 
 export interface PrimaryKey {
@@ -277,7 +281,7 @@ export class SQLError extends Error {
   cause?: any;
   meta?: Record<string, any>;
 
-  constructor(message: string, info?: { code?: string; dialect?: SQLDialect; cause?: any; [k: string]: any }) {
+  constructor(message: string, info?: { code?: string; dialect?: SQLDialect; cause?: any;[k: string]: any }) {
     super(message);
     this.name = 'SQLError';
     if (info) {
