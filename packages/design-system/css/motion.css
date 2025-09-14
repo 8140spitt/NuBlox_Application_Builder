@@ -1,1 +1,5 @@
-/* placeholder: run `pnpm -F @nublox/design-system build` to generate dist/css/motion.css` */
+@layer base {
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+  }
+}

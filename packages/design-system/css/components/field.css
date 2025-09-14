@@ -1,0 +1,13 @@
+@layer components {
+  .field{ display:flex; flex-direction:column; gap:.25rem }
+  .field input, .field textarea, .field select{
+    background:var(--surface-2); color:var(--text);
+    border:1px solid var(--border); border-radius: var(--radius-md);
+    padding:.55rem .7rem; outline: none; transition: box-shadow var(--dur-1) var(--ease-productive), border-color var(--dur-1) var(--ease-productive);
+  }
+  .field input:focus-visible, .field textarea:focus-visible, .field select:focus-visible{
+    border-color: var(--brand2-500);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--brand2-500), transparent 75%);
+  }
+  .field[aria-invalid="true"] input{ border-color: var(--danger-500) }
+}

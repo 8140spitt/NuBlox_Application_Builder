@@ -1,0 +1,7 @@
+@layer components {
+  .alert{padding:.7rem 1rem;border-radius:var(--radius-md);border:1px solid #0002}
+  .alert--info{ background:var(--info-100); color:var(--on-info-100) }
+  .alert--success{ background:var(--success-100); color:var(--on-success-100) }
+  .alert--warning{ background:var(--warning-100); color:var(--on-warning-100) }
+  .alert--danger{ background:var(--danger-100); color:var(--on-danger-100) }
+}

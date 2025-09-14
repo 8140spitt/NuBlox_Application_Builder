@@ -1,0 +1,35 @@
+{
+  "name": "@nublox/migrate",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "nublox-migrate": "dist/cli.js"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "package.json"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rimraf dist",
+    "dev": "tsc -w -p tsconfig.json"
+  },
+  "dependencies": {
+    "@nublox/sqlx": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2",
+    "rimraf": "^6.0.1"
+  },
+  "packageManager": "pnpm@10.16.1"
+}

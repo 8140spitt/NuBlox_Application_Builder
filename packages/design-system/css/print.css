@@ -1,1 +1,3 @@
-/* placeholder: run `pnpm -F @nublox/design-system build` to generate dist/css/print.css` */
+@layer base {
+  @media print{ *{box-shadow:none!important} .btn{border:1px solid #000!important} }
+}

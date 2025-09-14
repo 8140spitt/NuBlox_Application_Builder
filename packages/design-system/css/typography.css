@@ -1,1 +1,20 @@
-/* placeholder: run `pnpm -F @nublox/design-system build` to generate dist/css/typography.css` */
+@layer base {
+  :root{
+    --font-sans: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+    --size-1: clamp(12px, .75vw, 13px);
+    --size-2: clamp(14px, .9vw, 15px);
+    --size-3: clamp(16px, 1vw, 16px);
+    --size-4: clamp(18px, 1.2vw, 18px);
+    --size-5: clamp(22px, 1.6vw, 22px);
+    --size-6: clamp(28px, 2.2vw, 28px);
+    --size-7: clamp(36px, 3vw, 36px);
+  }
+
+  .h1{ font-size: var(--size-7); font-weight: 700; }
+  .h2{ font-size: var(--size-6); font-weight: 700; }
+  .h3{ font-size: var(--size-5); font-weight: 700; }
+  .h4{ font-size: var(--size-4); font-weight: 600; }
+  .mono{font-family: var(--font-mono)}
+}

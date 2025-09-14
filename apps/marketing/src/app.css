@@ -1,5 +1,4 @@
 /* 1) Pull in NuBlox DS tokens & components (framework-agnostic CSS) */
-@import '@nublox/design-system/css/tokens.css';
 @import '@nublox/design-system/css/nublox-design-system.css';
 
 /* 2) Page-level cosmetics that lean on semantic tokens */
