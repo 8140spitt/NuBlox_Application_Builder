@@ -10,25 +10,28 @@
       "import": "./dist/index.js"
     }
   },
-  "sideEffects": false,
   "files": [
     "dist",
     "README.md",
     "package.json"
   ],
+  "sideEffects": false,
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "clean": "rimraf dist",
     "dev": "tsc -w -p tsconfig.json"
   },
   "dependencies": {
-    "@nublox/design-system": "workspace:*",
     "@nublox/validate": "workspace:*",
+    "@nublox/sqlx": "workspace:*",
+    "@nublox/auth": "workspace:*",
+    "@nublox/session-store": "workspace:*",
     "pino": "^9.5.0"
   },
   "devDependencies": {
+    "typescript": "^5.9.2",
     "rimraf": "^6.0.1",
-    "typescript": "^5.9.2"
+    "@types/node": "^20.11.30"
   },
   "packageManager": "pnpm@10.16.1"
 }

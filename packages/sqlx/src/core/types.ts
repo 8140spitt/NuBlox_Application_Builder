@@ -1,19 +1,9 @@
-/**
- * NuBlox SQLX — Core types (v0.1)
- */
-
+/** NuBlox SQLX — Core types (v0.1) */
 export type SQLDialect = 'mysql' | 'postgresql' | 'sqlite' | 'sqlserver' | 'oracle';
 
 export type RowObject = Record<string, any>;
 
-export type SQLValue =
-  | string
-  | number
-  | boolean
-  | Date
-  | null
-  | Uint8Array
-  | Buffer;
+export type SQLValue = string | number | boolean | Date | null | Uint8Array | Buffer;
 
 export type SQLParams = Array<SQLValue | RowObject>;
 
@@ -52,11 +42,7 @@ export interface PreparedStatement {
   close(): Promise<void>;
 }
 
-export type IsolationLevel =
-  | 'read_uncommitted'
-  | 'read_committed'
-  | 'repeatable_read'
-  | 'serializable';
+export type IsolationLevel = 'read_uncommitted' | 'read_committed' | 'repeatable_read' | 'serializable';
 
 export interface SQLTransaction {
   readonly dialect: SQLDialect;
@@ -82,8 +68,7 @@ export interface SQLClient {
   close(): Promise<void>;
 }
 
-// ---------- Schema metadata ----------
-
+/** Schema metadata */
 export interface SchemaIdent { schema: string; }
 export interface TableIdent { schema: string; table: string; }
 
@@ -101,15 +86,12 @@ export interface ColumnDef {
   isUnique?: boolean;
   ordinalPosition?: number | null;
   comment?: string | null;
-  defaultValue?: SQLValue | null;   // param-safe default (numbers, strings, dates, boolean, null)
-  computedExpr?: string | null;     // expression for computed/generated columns
-  computedStored?: boolean;         // true if computed column is stored (not virtual)
+  defaultValue?: SQLValue | null;
+  computedExpr?: string | null;
+  computedStored?: boolean;
 }
 
-export interface PrimaryKey {
-  name?: string | null;
-  columns: string[];
-}
+export interface PrimaryKey { name?: string | null; columns: string[]; }
 
 export interface IndexDef {
   name: string;
@@ -119,10 +101,7 @@ export interface IndexDef {
   using?: string | null;
 }
 
-export interface CheckDef {
-  name: string;
-  expression: string;
-}
+export interface CheckDef { name: string; expression: string; }
 
 export type FKAction = 'no_action' | 'restrict' | 'cascade' | 'set_null' | 'set_default';
 
@@ -136,10 +115,7 @@ export interface ForeignKeyDef {
   onDelete?: FKAction;
 }
 
-export interface ViewDef {
-  name: string;
-  definitionSQL: string;
-}
+export interface ViewDef { name: string; definitionSQL: string; }
 
 export interface TableDef {
   ident: TableIdent;
@@ -158,8 +134,7 @@ export interface SchemaSnapshot {
   tables: TableDef[];
 }
 
-// ---------- Builders ----------
-
+/** Builders */
 export interface DDLBuilder {
   quoteIdent(name: string): string;
   createTable(ident: TableIdent, def: TableDef, opts?: Record<string, any>): string;
@@ -208,79 +183,44 @@ export interface AlterTableCommand {
   setComment?: string | null;
 }
 
-// ---------- Introspector ----------
-
+/** Introspector */
 export interface DialectIntrospector {
   snapshot(schemas?: string[]): Promise<SchemaSnapshot>;
   table(ident: TableIdent): Promise<TableDef | null>;
   showCreateTable(ident: TableIdent): Promise<string | null>;
 }
 
-// ---------- Capabilities ----------
-
+/** Capabilities */
 export interface CapabilityMatrix {
   ddl: {
-    createTable: boolean;
-    alterTable: boolean;
-    dropTable: boolean;
-    createIndex: boolean;
-    alterIndex: boolean;
-    dropIndex: boolean;
-    createView: boolean;
-    triggers: boolean;
-    sequences: boolean;
-    computedColumns: boolean;
+    createTable: boolean; alterTable: boolean; dropTable: boolean;
+    createIndex: boolean; alterIndex: boolean; dropIndex: boolean;
+    createView: boolean; triggers: boolean; sequences: boolean; computedColumns: boolean;
   };
   dml: {
     upsert: 'on_duplicate' | 'on_conflict' | 'merge' | false;
-    returning: boolean;
-    ctes: boolean;
-    windowFunctions: boolean;
+    returning: boolean; ctes: boolean; windowFunctions: boolean;
   };
-  dcl: {
-    users: boolean;
-    roles: boolean;
-    grants: boolean;
-    rowLevelSecurity: boolean;
-  };
-  tcl: {
-    savepoints: boolean;
-    setIsolation: boolean;
-    parallelTransactions: boolean;
-  };
-  misc: {
-    explain: boolean;
-    analyze: boolean;
-    serverCursors: boolean;
-    jsonNative: boolean;
-    fullTextSearch: boolean;
-    generatedColumns: boolean;
-  };
+  dcl: { users: boolean; roles: boolean; grants: boolean; rowLevelSecurity: boolean; };
+  tcl: { savepoints: boolean; setIsolation: boolean; parallelTransactions: boolean; };
+  misc: { explain: boolean; analyze: boolean; serverCursors: boolean; jsonNative: boolean; fullTextSearch: boolean; generatedColumns: boolean; };
 }
 
-// ---------- Provider ----------
-
+/** Provider */
 export interface DialectProvider {
   dialect: SQLDialect;
   capabilities: CapabilityMatrix;
   connect(config: URL | string | Record<string, any>): Promise<SQLClient>;
   createIntrospector(client: SQLClient): DialectIntrospector;
-  builders: {
-    ddl: DDLBuilder;
-    dml: DMLBuilder;
-    dcl: DCLBuilder;
-    tcl: TCLBuilder;
-  };
+  builders: { ddl: DDLBuilder; dml: DMLBuilder; dcl: DCLBuilder; tcl: TCLBuilder; };
 }
 
-// ---------- Errors ----------
-
+/** Errors */
 export class SQLError extends Error {
   code?: string;
   dialect?: SQLDialect;
   cause?: any;
   meta?: Record<string, any>;
-
   constructor(message: string, info?: { code?: string; dialect?: SQLDialect; cause?: any;[k: string]: any }) {
     super(message);
     this.name = 'SQLError';

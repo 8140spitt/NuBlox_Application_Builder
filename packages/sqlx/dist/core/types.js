@@ -1,7 +1,4 @@
-/**
- * NuBlox SQLX — Core types (v0.1)
- */
-// ---------- Errors ----------
+/** Errors */
 export class SQLError extends Error {
     code;
     dialect;

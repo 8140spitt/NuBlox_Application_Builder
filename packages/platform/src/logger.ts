@@ -1,7 +1,5 @@
 import pino from 'pino';
-
 export type Logger = pino.Logger;
-
 export function createLogger(name = 'nublox') {
     return pino({
         name,

@@ -1,8 +1,4 @@
-export type WorkspaceResolution = {
-    host: string;
-    workspaceSlug: string | null; // null means default/global
-};
-
+export type WorkspaceResolution = { host: string; workspaceSlug: string | null };
 export function resolveWorkspaceFromHost(hostHeader: string, apexDomains: string[] = ['nublox.local', 'nublox.io']): WorkspaceResolution {
     const host = (hostHeader || '').split(':')[0].toLowerCase();
     const apex = apexDomains.find(d => host.endsWith(d));

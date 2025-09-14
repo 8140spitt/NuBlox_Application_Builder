@@ -37,7 +37,7 @@ class VString extends VType {
     min(n, msg = `Must be at least ${n} chars`) { this.#checks.push(s => s.length >= n ? null : msg); return this; }
     max(n, msg = `Must be at most ${n} chars`) { this.#checks.push(s => s.length <= n ? null : msg); return this; }
     regex(rx, msg = 'Invalid format') { this.#checks.push(s => rx.test(s) ? null : msg); return this; }
-    // Typed union: returns VType<T> where T is the union of provided literals
+    // Typed literal union
     oneOf(vals, msg = `Must be one of ${vals.join(', ')}`) {
         const base = this;
         return new (class extends VType {
@@ -104,9 +104,8 @@ class VObject extends VType {
         this.shape = shape;
     }
     parse(d, path = "") {
-        if (typeof d !== 'object' || d === null || Array.isArray(d)) {
+        if (typeof d !== 'object' || d === null || Array.isArray(d))
             return { ok: false, issues: [{ path, message: 'Expected object' }] };
-        }
         const out = {};
         const issues = [];
         for (const k of Object.keys(this.shape)) {

@@ -1,6 +1,7 @@
 export type RequestEvent = {
     request: Request;
     locals: Record<string, any>;
+    cookies?: any;
     setHeaders(name: string, value: string): void;
 };
 export type Handle = (input: {

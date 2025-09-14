@@ -29,7 +29,6 @@ abstract class VType<T> {
 /* primitives */
 class VString extends VType<string> {
   #checks: ((s: string) => string | null)[] = [];
-
   parse(d: unknown, path = ""): Result<string> {
     if (typeof d !== 'string') return { ok: false, issues: [{ path, message: 'Expected string' }] };
     for (const check of this.#checks) {
@@ -38,12 +37,11 @@ class VString extends VType<string> {
     }
     return { ok: true, value: d };
   }
-
   min(n: number, msg = `Must be at least ${n} chars`) { this.#checks.push(s => s.length >= n ? null : msg); return this; }
   max(n: number, msg = `Must be at most ${n} chars`) { this.#checks.push(s => s.length <= n ? null : msg); return this; }
   regex(rx: RegExp, msg = 'Invalid format') { this.#checks.push(s => rx.test(s) ? null : msg); return this; }
 
-  // Typed union: returns VType<T> where T is the union of provided literals
+  // Typed literal union
   oneOf<T extends string>(vals: readonly T[], msg = `Must be one of ${vals.join(', ')}`): VType<T> {
     const base = this;
     return new (class extends VType<T> {
@@ -66,10 +64,7 @@ class VNumber extends VType<number> {
   #checks: ((n: number) => string | null)[] = [];
   parse(d: unknown, path = ""): Result<number> {
     if (typeof d !== 'number' || Number.isNaN(d)) return { ok: false, issues: [{ path, message: 'Expected number' }] };
-    for (const c of this.#checks) {
-      const err = c(d);
-      if (err) return { ok: false, issues: [{ path, message: err }] };
-    }
+    for (const c of this.#checks) { const err = c(d); if (err) return { ok: false, issues: [{ path, message: err }] }; }
     return { ok: true, value: d };
   }
   int(msg = 'Expected integer') { this.#checks.push(n => Number.isInteger(n) ? null : msg); return this; }
@@ -99,9 +94,7 @@ class VArray<T> extends VType<T[]> {
 class VObject<T extends Record<string, any>> extends VType<T> {
   constructor(private shape: { [K in keyof T]: VType<T[K]> }) { super(); }
   parse(d: unknown, path = ""): Result<T> {
-    if (typeof d !== 'object' || d === null || Array.isArray(d)) {
-      return { ok: false, issues: [{ path, message: 'Expected object' }] };
-    }
+    if (typeof d !== 'object' || d === null || Array.isArray(d)) return { ok: false, issues: [{ path, message: 'Expected object' }] };
     const out: Partial<T> = {}; const issues: Issue[] = [];
     for (const k of Object.keys(this.shape) as (keyof T)[]) {
       const r = this.shape[k].parse((d as any)[k], path ? `${path}.${String(k)}` : String(k));

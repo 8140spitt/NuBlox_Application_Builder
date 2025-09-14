@@ -1,6 +1,6 @@
 {
   "name": "@nublox/db",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -18,10 +18,10 @@
     "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "mysql2": "^3.10.0"
+    "@nublox/sqlx": "workspace:*"
   },
   "devDependencies": {
-    "typescript": "^5.5.4",
+    "typescript": "^5.9.2",
     "@types/node": "^20.11.30"
   }
 }

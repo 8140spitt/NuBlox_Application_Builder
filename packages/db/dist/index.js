@@ -1,42 +1,21 @@
-import mysql from 'mysql2/promise';
-/** Expose the underlying pool if you need lower-level access */
-export const createDB = (env = process.env) => {
-    const pool = mysql.createPool({
-        host: env.DB_HOST ?? '127.0.0.1',
-        port: Number(env.DB_PORT ?? 3306),
-        user: env.DB_USER ?? 'root',
-        password: env.DB_PASS ?? '',
-        database: env.DB_NAME ?? 'nublox_studio',
-        waitForConnections: true,
-        connectionLimit: 10,
-        namedPlaceholders: true
+import { registerProvider, connectAndDetect } from '@nublox/sqlx';
+import { mysqlProvider } from '@nublox/sqlx'; // auto-registered in sqlx/index, but safe to import
+export async function createDB(url = process.env.DATABASE_URL || 'mysql://root:root@127.0.0.1:3306/nublox') {
+    // Ensure MySQL provider is registered (no-op if already)
+    registerProvider(mysqlProvider);
+    const { client } = await connectAndDetect(url);
+    const query = async (sql, params = []) => (await client.query(sql, params)).rows;
+    const exec = async (sql, params = []) => client.exec(sql, params);
+    const tx = async (fn) => client.transaction(async (txc) => {
+        const sub = {
+            client: txc,
+            query: async (s, p = []) => (await txc.query(s, p)).rows,
+            exec: (s, p = []) => txc.exec(s, p),
+            tx: async (f) => f(sub),
+            close: async () => { }
+        };
+        return fn(sub);
     });
-    const query = async function query(sql, params = []) {
-        const [rows] = await pool.query(sql, params);
-        return rows;
-    };
-    const exec = async function exec(sql, params = []) {
-        const [res] = await pool.execute(sql, params);
-        return res;
-    };
-    const tx = async function withTx(fn) {
-        const conn = await pool.getConnection();
-        try {
-            await conn.beginTransaction();
-            const out = await fn(conn);
-            await conn.commit();
-            return out;
-        }
-        catch (err) {
-            try {
-                await conn.rollback();
-            }
-            catch { }
-            throw err;
-        }
-        finally {
-            conn.release();
-        }
-    };
-    return { pool, query, exec, tx };
-};
+    const close = async () => client.close();
+    return { client, query, exec, tx, close };
+}

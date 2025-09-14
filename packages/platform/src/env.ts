@@ -8,8 +8,8 @@ export type PlatformEnv = {
     PORT?: number;
 };
 
-const EnvSchema = v.object < PlatformEnv > ({
-    NODE_ENV: v.string().oneOf(['development', 'test', 'production']).default('development'),
+const EnvSchema = v.object<PlatformEnv>({
+    NODE_ENV: v.string().oneOf(['development', 'test', 'production'] as const).default('development'),
     DATABASE_URL: v.string().min(5, 'DATABASE_URL required'),
     SESSION_SECRET: v.string().min(16, 'SESSION_SECRET must be >= 16 chars'),
     ORIGIN: v.string().optional(),

@@ -1,7 +1,7 @@
-// Local structural types to avoid depending on @sveltejs/kit at build time
 export type RequestEvent = {
     request: Request;
     locals: Record<string, any>;
+    cookies?: any;
     setHeaders(name: string, value: string): void;
 };
 

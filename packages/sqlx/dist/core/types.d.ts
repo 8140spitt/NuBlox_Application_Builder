@@ -1,6 +1,4 @@
-/**
- * NuBlox SQLX — Core types (v0.1)
- */
+/** NuBlox SQLX — Core types (v0.1) */
 export type SQLDialect = 'mysql' | 'postgresql' | 'sqlite' | 'sqlserver' | 'oracle';
 export type RowObject = Record<string, any>;
 export type SQLValue = string | number | boolean | Date | null | Uint8Array | Buffer;
@@ -62,6 +60,7 @@ export interface SQLClient {
     capabilities(): Promise<CapabilityMatrix>;
     close(): Promise<void>;
 }
+/** Schema metadata */
 export interface SchemaIdent {
     schema: string;
 }
@@ -131,6 +130,7 @@ export interface SchemaSnapshot {
     schemas: SchemaIdent[];
     tables: TableDef[];
 }
+/** Builders */
 export interface DDLBuilder {
     quoteIdent(name: string): string;
     createTable(ident: TableIdent, def: TableDef, opts?: Record<string, any>): string;
@@ -187,11 +187,13 @@ export interface AlterTableCommand {
     dropForeignKeys?: string[];
     setComment?: string | null;
 }
+/** Introspector */
 export interface DialectIntrospector {
     snapshot(schemas?: string[]): Promise<SchemaSnapshot>;
     table(ident: TableIdent): Promise<TableDef | null>;
     showCreateTable(ident: TableIdent): Promise<string | null>;
 }
+/** Capabilities */
 export interface CapabilityMatrix {
     ddl: {
         createTable: boolean;
@@ -231,6 +233,7 @@ export interface CapabilityMatrix {
         generatedColumns: boolean;
     };
 }
+/** Provider */
 export interface DialectProvider {
     dialect: SQLDialect;
     capabilities: CapabilityMatrix;
@@ -243,6 +246,7 @@ export interface DialectProvider {
         tcl: TCLBuilder;
     };
 }
+/** Errors */
 export declare class SQLError extends Error {
     code?: string;
     dialect?: SQLDialect;
