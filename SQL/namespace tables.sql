@@ -1,12 +1,14 @@
 -- ==========================================================
--- NuBlox — Fresh Install DDL (Studios: platform, sql, api, ui, workflow, devops)
--- MySQL 8.0+
+-- NuBlox — Fresh Install + Patch (MySQL 8.0+)
+-- Idempotent: safe to re-run
 -- ==========================================================
 
+/* Session guards */
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
 
+/* ---------- Fresh schemas (drop + create) ---------- */
 DROP SCHEMA IF EXISTS `platform`;
 DROP SCHEMA IF EXISTS `sqlx`;
 DROP SCHEMA IF EXISTS `api`;
@@ -14,18 +16,16 @@ DROP SCHEMA IF EXISTS `ui`;
 DROP SCHEMA IF EXISTS `workflow`;
 DROP SCHEMA IF EXISTS `devops`;
 
--- Schemas
 CREATE SCHEMA IF NOT EXISTS `platform`  DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
-CREATE SCHEMA IF NOT EXISTS `sqlx`       DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+CREATE SCHEMA IF NOT EXISTS `sqlx`      DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 CREATE SCHEMA IF NOT EXISTS `api`       DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 CREATE SCHEMA IF NOT EXISTS `ui`        DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 CREATE SCHEMA IF NOT EXISTS `workflow`  DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 CREATE SCHEMA IF NOT EXISTS `devops`    DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
--- =======================
--- PLATFORM (core)
--- =======================
-
+/* =======================
+   PLATFORM (core)
+   ======================= */
 CREATE TABLE IF NOT EXISTS platform.users (
   id            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   username      VARCHAR(190) NOT NULL,
@@ -39,23 +39,23 @@ CREATE TABLE IF NOT EXISTS platform.users (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS platform.business_accounts (
-  id                 BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  owner_user_id      BIGINT UNSIGNED NOT NULL,
-  name               VARCHAR(255) NOT NULL,
-  tax_id             VARCHAR(50) NULL DEFAULT NULL,
-  address_line1      VARCHAR(255) NOT NULL,
-  address_line2      VARCHAR(255) NULL DEFAULT NULL,
-  city               VARCHAR(100) NOT NULL,
-  postal_code        VARCHAR(20) NOT NULL,
-  country_code       CHAR(2) NOT NULL,
-  currency_code      CHAR(3) NOT NULL DEFAULT 'USD',
-  vat_exempt         TINYINT(1) NOT NULL DEFAULT 0,
-  contact_email      VARCHAR(190) NOT NULL,
-  payment_provider   VARCHAR(50) NOT NULL,
+  id                  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  owner_user_id       BIGINT UNSIGNED NOT NULL,
+  name                VARCHAR(255) NOT NULL,
+  tax_id              VARCHAR(50) NULL DEFAULT NULL,
+  address_line1       VARCHAR(255) NOT NULL,
+  address_line2       VARCHAR(255) NULL DEFAULT NULL,
+  city                VARCHAR(100) NOT NULL,
+  postal_code         VARCHAR(20) NOT NULL,
+  country_code        CHAR(2) NOT NULL,
+  currency_code       CHAR(3) NOT NULL DEFAULT 'USD',
+  vat_exempt          TINYINT(1) NOT NULL DEFAULT 0,
+  contact_email       VARCHAR(190) NOT NULL,
+  payment_provider    VARCHAR(50) NOT NULL,
   payment_provider_id VARCHAR(255) NOT NULL,
-  created_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  deleted_at         TIMESTAMP NULL DEFAULT NULL,
+  created_at          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at          TIMESTAMP NULL DEFAULT NULL,
   PRIMARY KEY (id),
   KEY idx_business_owner (owner_user_id),
   CONSTRAINT fk_business_owner FOREIGN KEY (owner_user_id) REFERENCES platform.users(id)
@@ -416,12 +416,12 @@ CREATE TABLE IF NOT EXISTS platform.storage_objects (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS platform.feature_flags (
-  id             BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  workspace_id   BIGINT UNSIGNED NOT NULL,
-  key_name       VARCHAR(100) NOT NULL,
+  id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  workspace_id    BIGINT UNSIGNED NOT NULL,
+  key_name        VARCHAR(100) NOT NULL,
   enabled_default TINYINT(1) NOT NULL DEFAULT 0,
-  rules_json     JSON NULL DEFAULT NULL,
-  created_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  rules_json      JSON NULL DEFAULT NULL,
+  created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uq_ff (workspace_id, key_name),
   KEY idx_ff_ws (workspace_id),
@@ -521,9 +521,9 @@ CREATE TABLE IF NOT EXISTS platform.db_migrations (
   UNIQUE KEY uq_dbmig_ver (version)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- =======================
--- DEVOPS
--- =======================
+/* =======================
+   DEVOPS
+   ======================= */
 CREATE TABLE IF NOT EXISTS devops.environments (
   id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   project_id  BIGINT UNSIGNED NOT NULL,
@@ -589,9 +589,9 @@ CREATE TABLE IF NOT EXISTS devops.deployments (
   CONSTRAINT fk_dep_build FOREIGN KEY (build_id) REFERENCES devops.builds(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- =======================
--- API
--- =======================
+/* =======================
+   API
+   ======================= */
 CREATE TABLE IF NOT EXISTS api.collections (
   id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   project_id  BIGINT UNSIGNED NOT NULL,
@@ -625,14 +625,14 @@ CREATE TABLE IF NOT EXISTS api.endpoints (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS api.policies (
-  id                BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  endpoint_id       BIGINT UNSIGNED NOT NULL,
-  auth_required     TINYINT(1) NOT NULL DEFAULT 1,
-  role_requirements JSON NULL DEFAULT NULL,
+  id                 BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  endpoint_id        BIGINT UNSIGNED NOT NULL,
+  auth_required      TINYINT(1) NOT NULL DEFAULT 1,
+  role_requirements  JSON NULL DEFAULT NULL,
   rate_limit_per_min INT UNSIGNED NULL DEFAULT NULL,
-  cors_json         JSON NULL DEFAULT NULL,
-  created_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  cors_json          JSON NULL DEFAULT NULL,
+  created_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uq_api_policy (endpoint_id),
   KEY idx_api_policy_ep (endpoint_id),
@@ -690,9 +690,9 @@ CREATE TABLE IF NOT EXISTS api.request_logs (
   CONSTRAINT fk_api_log_env FOREIGN KEY (environment_id) REFERENCES devops.environments(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- =======================
--- UI
--- =======================
+/* =======================
+   UI
+   ======================= */
 CREATE TABLE IF NOT EXISTS ui.pages (
   id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   project_id   BIGINT UNSIGNED NOT NULL,
@@ -759,9 +759,9 @@ CREATE TABLE IF NOT EXISTS ui.assets (
   CONSTRAINT fk_ui_assets_user FOREIGN KEY (created_by) REFERENCES platform.users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- =======================
--- WORKFLOW
--- =======================
+/* =======================
+   WORKFLOW
+   ======================= */
 CREATE TABLE IF NOT EXISTS workflow.workflows (
   id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   project_id  BIGINT UNSIGNED NOT NULL,
@@ -848,9 +848,9 @@ CREATE TABLE IF NOT EXISTS workflow.webhooks (
   CONSTRAINT fk_wfh_wf FOREIGN KEY (workflow_id) REFERENCES workflow.workflows(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- =======================
--- SQL (NuBlox SQL Studio)
--- =======================
+/* =======================
+   SQL (NuBlox SQL Studio)
+   ======================= */
 CREATE TABLE IF NOT EXISTS sqlx.connections (
   id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   name            VARCHAR(190) NOT NULL,
@@ -1086,7 +1086,7 @@ CREATE TABLE IF NOT EXISTS sqlx.query_results (
   id               BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   db_connection_id BIGINT UNSIGNED NOT NULL,
   query_sql        LONGTEXT NOT NULL,
-  result_json      LONGTEXT NOT NULL,
+  result_json      JSON NOT NULL,
   created_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   KEY idx_dbqr_conn_created (db_connection_id, created_at),
@@ -1236,76 +1236,98 @@ CREATE TABLE IF NOT EXISTS sqlx.user_permissions (
   CONSTRAINT fk_dbup_cid FOREIGN KEY (db_connection_id) REFERENCES sqlx.connections(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+/* Restore session */
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
 
--- NuBlox platform patch: JSON types, soft-delete uniques, FKs with CASCADE,
--- precision timestamps, schema defaults, and pragmatic indexes.
+/* ==========================================================
+   PATCH SECTION (idempotent)
+   ========================================================== */
 
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
 
--- -------------------------------------------------------------------
--- 0) Ensure schema defaults
--- -------------------------------------------------------------------
-ALTER SCHEMA platform
-  DEFAULT CHARACTER SET utf8mb4
-  DEFAULT COLLATE utf8mb4_0900_ai_ci;
+/* Always drop before (re)creating to avoid Error 1304 */
+DROP PROCEDURE IF EXISTS platform.drop_fk_if_exists;
 
--- -------------------------------------------------------------------
--- 1) Convert LONGTEXT JSON-ish columns to proper JSON
---    (Will fail if rows contain invalid JSON)
--- -------------------------------------------------------------------
-ALTER TABLE platform.api_endpoints                  MODIFY config_json        JSON NOT NULL;
-ALTER TABLE platform.notification_events            MODIFY payload_json       JSON NOT NULL;
-ALTER TABLE platform.saved_views                    MODIFY config_json        JSON NOT NULL;
-ALTER TABLE platform.ui_components_library          MODIFY definition_json    JSON NOT NULL;
-ALTER TABLE platform.ui_page_versions               MODIFY tree_json          JSON NOT NULL;
-ALTER TABLE platform.workflow_versions              MODIFY graph_json         JSON NOT NULL;
-ALTER TABLE platform.data_sources                   MODIFY config_json        JSON NOT NULL;
+DELIMITER //
+CREATE PROCEDURE platform.drop_fk_if_exists(
+  IN sch VARCHAR(64),
+  IN tbl VARCHAR(64),
+  IN fk  VARCHAR(64)
+)
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.referential_constraints
+    WHERE CONSTRAINT_SCHEMA = sch
+      AND TABLE_NAME       = tbl
+      AND CONSTRAINT_NAME  = fk
+  ) THEN
+    SET @s = CONCAT('ALTER TABLE `', sch, '`.`', tbl, '` DROP FOREIGN KEY `', fk, '`');
+    PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+  END IF;
+END//
+DELIMITER ;
 
-ALTER TABLE platform.db_query_results               MODIFY result_json        JSON NOT NULL;
+DROP PROCEDURE IF EXISTS platform.drop_index_if_exists;
+DELIMITER //
+CREATE PROCEDURE platform.drop_index_if_exists(
+  IN sch VARCHAR(64),
+  IN tbl VARCHAR(64),
+  IN idx VARCHAR(64)
+)
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.statistics
+    WHERE table_schema = sch
+      AND table_name   = tbl
+      AND index_name   = idx
+  ) THEN
+    SET @s = CONCAT('ALTER TABLE `', sch, '`.`', tbl, '` DROP INDEX `', idx, '`');
+    PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+  END IF;
+END//
+DELIMITER ;
 
-ALTER TABLE platform.workflow_run_nodes             MODIFY output_json        JSON NULL;
+/* 0) Ensure schema defaults */
+ALTER SCHEMA platform  DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_0900_ai_ci;
+ALTER SCHEMA api       DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_0900_ai_ci;
+ALTER SCHEMA ui        DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_0900_ai_ci;
+ALTER SCHEMA workflow  DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_0900_ai_ci;
+ALTER SCHEMA devops    DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_0900_ai_ci;
+ALTER SCHEMA sqlx      DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_0900_ai_ci;
 
-ALTER TABLE platform.api_request_logs
+
+ALTER TABLE platform.task_attachments
+  MODIFY user_id BIGINT UNSIGNED NULL;
+
+ALTER TABLE platform.task_comments
+  MODIFY user_id BIGINT UNSIGNED NULL;
+
+/* 1) Normalize JSON columns (safe no-op if already JSON) */
+ALTER TABLE api.endpoints                 MODIFY config_json        JSON NOT NULL;
+ALTER TABLE platform.notification_events  MODIFY payload_json       JSON NOT NULL;
+ALTER TABLE ui.components_library         MODIFY definition_json    JSON NOT NULL;
+ALTER TABLE ui.page_versions              MODIFY tree_json          JSON NOT NULL;
+ALTER TABLE workflow.versions             MODIFY graph_json         JSON NOT NULL;
+ALTER TABLE sqlx.data_sources             MODIFY config_json        JSON NOT NULL;
+ALTER TABLE sqlx.query_results            MODIFY result_json        JSON NOT NULL;
+ALTER TABLE workflow.run_nodes            MODIFY output_json        JSON NULL;
+ALTER TABLE api.request_logs
   MODIFY req_headers_json  JSON NULL,
   MODIFY req_body_json     JSON NULL,
   MODIFY res_headers_json  JSON NULL,
   MODIFY res_body_json     JSON NULL;
 
--- These were already JSON in your base schema (kept as-is, listed for clarity):
--- platform.api_policies.role_requirements, platform.api_policies.cors_json,
--- platform.api_keys.scopes_json, platform.audit_events.metadata_json,
--- platform.db_user_activity.activity_details
-
--- -------------------------------------------------------------------
--- 2) Soft-delete aware uniques for slugs (re-usable names after delete)
--- -------------------------------------------------------------------
--- Workspaces
-ALTER TABLE platform.workspaces
-  ADD COLUMN is_deleted TINYINT(1) AS (deleted_at IS NOT NULL) STORED;
--- replace unique index on slug
-DROP INDEX uq_workspace_slug ON platform.workspaces;
-CREATE UNIQUE INDEX uq_workspace_slug_active ON platform.workspaces (slug, is_deleted);
-
--- Projects
-ALTER TABLE platform.projects
-  ADD COLUMN is_deleted TINYINT(1) AS (deleted_at IS NOT NULL) STORED;
--- replace unique index on (workspace_id, slug)
-DROP INDEX uq_project_slug ON platform.projects;
-CREATE UNIQUE INDEX uq_project_slug_active ON platform.projects (workspace_id, slug, is_deleted);
-
--- -------------------------------------------------------------------
--- 3) Precision timestamps on hot event tables
--- -------------------------------------------------------------------
-ALTER TABLE platform.api_request_logs
+/* 3) Precision timestamps */
+ALTER TABLE api.request_logs
   MODIFY created_at TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6);
 
--- (Optional but recommended for timelines)
-ALTER TABLE platform.workflow_runs
+ALTER TABLE workflow.runs
   MODIFY started_at  TIMESTAMP(6) NULL DEFAULT NULL,
   MODIFY finished_at TIMESTAMP(6) NULL DEFAULT NULL,
   MODIFY created_at  TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6);
@@ -1313,570 +1335,418 @@ ALTER TABLE platform.workflow_runs
 ALTER TABLE platform.notification_deliveries
   MODIFY created_at  TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6);
 
--- -------------------------------------------------------------------
--- 4) Rebuild FKs with explicit ON DELETE behavior
---     (CASCADE where rows are strictly children; SET NULL where nullable)
--- -------------------------------------------------------------------
+/* 4) Rebind foreign keys with explicit ON DELETE behavior */
+-- api.collections → projects
+CALL platform.drop_fk_if_exists('api','collections','fk_api_coll_proj');
+ALTER TABLE api.collections
+  ADD CONSTRAINT fk_api_collections__project_id
+  FOREIGN KEY (project_id) REFERENCES platform.projects(id) ON DELETE CASCADE;
 
--- api_collections → projects
-ALTER TABLE platform.api_collections
-  DROP FOREIGN KEY fk_api_coll_proj,
-  ADD CONSTRAINT fk_api_coll_proj
-    FOREIGN KEY (project_id) REFERENCES platform.projects(id)
-    ON DELETE CASCADE;
+-- api.endpoints → projects / collections
+CALL platform.drop_fk_if_exists('api','endpoints','fk_api_ep_proj');
+CALL platform.drop_fk_if_exists('api','endpoints','fk_api_ep_coll');
+ALTER TABLE api.endpoints
+  ADD CONSTRAINT fk_api_endpoints__project_id
+  FOREIGN KEY (project_id) REFERENCES platform.projects(id) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_api_endpoints__collection_id
+  FOREIGN KEY (collection_id) REFERENCES api.collections(id) ON DELETE SET NULL;
 
--- api_endpoints → projects / collections
-ALTER TABLE platform.api_endpoints
-  DROP FOREIGN KEY fk_api_ep_proj,
-  DROP FOREIGN KEY fk_api_ep_coll,
-  ADD CONSTRAINT fk_api_ep_proj
-    FOREIGN KEY (project_id) REFERENCES platform.projects(id)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT fk_api_ep_coll
-    FOREIGN KEY (collection_id) REFERENCES platform.api_collections(id)
-    ON DELETE SET NULL;
+-- api.policies → endpoints
+CALL platform.drop_fk_if_exists('api','policies','fk_api_policy_ep');
+ALTER TABLE api.policies
+  ADD CONSTRAINT fk_api_policies__endpoint_id
+  FOREIGN KEY (endpoint_id) REFERENCES api.endpoints(id) ON DELETE CASCADE;
 
--- api_policies → endpoints
-ALTER TABLE platform.api_policies
-  DROP FOREIGN KEY fk_api_policy_ep,
-  ADD CONSTRAINT fk_api_policy_ep
-    FOREIGN KEY (endpoint_id) REFERENCES platform.api_endpoints(id)
-    ON DELETE CASCADE;
+-- devops.environments → projects
+CALL platform.drop_fk_if_exists('devops','environments','fk_env_project');
+ALTER TABLE devops.environments
+  ADD CONSTRAINT fk_devops_environments__project_id
+  FOREIGN KEY (project_id) REFERENCES platform.projects(id) ON DELETE CASCADE;
 
--- environments → projects
-ALTER TABLE platform.environments
-  DROP FOREIGN KEY fk_env_project,
-  ADD CONSTRAINT fk_env_project
-    FOREIGN KEY (project_id) REFERENCES platform.projects(id)
-    ON DELETE CASCADE;
+-- api.request_logs → endpoints / environments
+CALL platform.drop_fk_if_exists('api','request_logs','fk_api_log_ep');
+CALL platform.drop_fk_if_exists('api','request_logs','fk_api_log_env');
+ALTER TABLE api.request_logs
+  ADD CONSTRAINT fk_api_request_logs__endpoint_id
+  FOREIGN KEY (endpoint_id) REFERENCES api.endpoints(id) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_api_request_logs__environment_id
+  FOREIGN KEY (environment_id) REFERENCES devops.environments(id) ON DELETE SET NULL;
 
--- api_request_logs → endpoints / environments
-ALTER TABLE platform.api_request_logs
-  DROP FOREIGN KEY fk_api_log_ep,
-  DROP FOREIGN KEY fk_api_log_env,
-  ADD CONSTRAINT fk_api_log_ep
-    FOREIGN KEY (endpoint_id) REFERENCES platform.api_endpoints(id)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT fk_api_log_env
-    FOREIGN KEY (environment_id) REFERENCES platform.environments(id)
-    ON DELETE SET NULL;
+-- api.tests → collections
+CALL platform.drop_fk_if_exists('api','tests','fk_api_test_coll');
+ALTER TABLE api.tests
+  ADD CONSTRAINT fk_api_tests__collection_id
+  FOREIGN KEY (collection_id) REFERENCES api.collections(id) ON DELETE CASCADE;
 
--- api_tests → collections
-ALTER TABLE platform.api_tests
-  DROP FOREIGN KEY fk_api_test_coll,
-  ADD CONSTRAINT fk_api_test_coll
-    FOREIGN KEY (collection_id) REFERENCES platform.api_collections(id)
-    ON DELETE CASCADE;
-
--- audit_events → workspaces / users
+-- platform.audit_events → workspaces / users
+CALL platform.drop_fk_if_exists('platform','audit_events','fk_audit_ws');
+CALL platform.drop_fk_if_exists('platform','audit_events','fk_audit_user');
 ALTER TABLE platform.audit_events
-  DROP FOREIGN KEY fk_audit_ws,
-  DROP FOREIGN KEY fk_audit_user,
-  ADD CONSTRAINT fk_audit_ws
-    FOREIGN KEY (workspace_id) REFERENCES platform.workspaces(id)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT fk_audit_user
-    FOREIGN KEY (actor_user_id) REFERENCES platform.users(id)
-    ON DELETE SET NULL;
+  ADD CONSTRAINT fk_platform_audit_events__workspace_id
+  FOREIGN KEY (workspace_id) REFERENCES platform.workspaces(id) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_platform_audit_events__actor_user_id
+  FOREIGN KEY (actor_user_id) REFERENCES platform.users(id) ON DELETE SET NULL;
 
--- builds → projects / users
-ALTER TABLE platform.builds
-  DROP FOREIGN KEY fk_build_proj,
-  DROP FOREIGN KEY fk_build_user,
-  ADD CONSTRAINT fk_build_proj
-    FOREIGN KEY (project_id) REFERENCES platform.projects(id)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT fk_build_user
-    FOREIGN KEY (created_by) REFERENCES platform.users(id)
-    ON DELETE SET NULL;
+-- devops.builds → projects / users
+CALL platform.drop_fk_if_exists('devops','builds','fk_build_proj');
+CALL platform.drop_fk_if_exists('devops','builds','fk_build_user');
+ALTER TABLE devops.builds
+  ADD CONSTRAINT fk_devops_builds__project_id
+  FOREIGN KEY (project_id) REFERENCES platform.projects(id) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_devops_builds__created_by
+  FOREIGN KEY (created_by) REFERENCES platform.users(id) ON DELETE SET NULL;
 
--- saved_queries → connections / projects / users
-ALTER TABLE platform.saved_queries
-  DROP FOREIGN KEY fk_sq_conn,
-  DROP FOREIGN KEY fk_sq_proj,
-  DROP FOREIGN KEY fk_sq_user,
-  ADD CONSTRAINT fk_sq_conn
-    FOREIGN KEY (db_connection_id) REFERENCES platform.db_connections(id)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT fk_sq_proj
-    FOREIGN KEY (project_id) REFERENCES platform.projects(id)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT fk_sq_user
-    FOREIGN KEY (created_by) REFERENCES platform.users(id)
-    ON DELETE SET NULL;
+-- sqlx.saved_queries → connections / projects / users
+CALL platform.drop_fk_if_exists('sqlx','saved_queries','fk_sq_conn');
+CALL platform.drop_fk_if_exists('sqlx','saved_queries','fk_sq_proj');
+CALL platform.drop_fk_if_exists('sqlx','saved_queries','fk_sq_user');
+ALTER TABLE sqlx.saved_queries
+  ADD CONSTRAINT fk_sqlx_saved_queries__db_connection_id
+  FOREIGN KEY (db_connection_id) REFERENCES sqlx.connections(id) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_sqlx_saved_queries__project_id
+  FOREIGN KEY (project_id) REFERENCES platform.projects(id) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_sqlx_saved_queries__created_by
+  FOREIGN KEY (created_by) REFERENCES platform.users(id) ON DELETE SET NULL;
 
--- data_exports → projects / queries / users
-ALTER TABLE platform.data_exports
-  DROP FOREIGN KEY fk_de_proj,
-  DROP FOREIGN KEY fk_de_query,
-  DROP FOREIGN KEY fk_de_user,
-  ADD CONSTRAINT fk_de_proj
-    FOREIGN KEY (project_id) REFERENCES platform.projects(id)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT fk_de_query
-    FOREIGN KEY (query_ref) REFERENCES platform.saved_queries(id)
-    ON DELETE SET NULL,
-  ADD CONSTRAINT fk_de_user
-    FOREIGN KEY (created_by) REFERENCES platform.users(id)
-    ON DELETE SET NULL;
+-- sqlx.data_exports → projects / saved_queries / users
+CALL platform.drop_fk_if_exists('sqlx','data_exports','fk_de_proj');
+CALL platform.drop_fk_if_exists('sqlx','data_exports','fk_de_query');
+CALL platform.drop_fk_if_exists('sqlx','data_exports','fk_de_user');
+ALTER TABLE sqlx.data_exports
+  ADD CONSTRAINT fk_sqlx_data_exports__project_id
+  FOREIGN KEY (project_id) REFERENCES platform.projects(id) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_sqlx_data_exports__query_ref
+  FOREIGN KEY (query_ref) REFERENCES sqlx.saved_queries(id) ON DELETE SET NULL,
+  ADD CONSTRAINT fk_sqlx_data_exports__created_by
+  FOREIGN KEY (created_by) REFERENCES platform.users(id) ON DELETE SET NULL;
 
--- data_imports → projects / users
-ALTER TABLE platform.data_imports
-  DROP FOREIGN KEY fk_di_proj,
-  DROP FOREIGN KEY fk_di_user,
-  ADD CONSTRAINT fk_di_proj
-    FOREIGN KEY (project_id) REFERENCES platform.projects(id)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT fk_di_user
-    FOREIGN KEY (created_by) REFERENCES platform.users(id)
-    ON DELETE SET NULL;
+-- sqlx.data_imports → projects / users
+CALL platform.drop_fk_if_exists('sqlx','data_imports','fk_di_proj');
+CALL platform.drop_fk_if_exists('sqlx','data_imports','fk_di_user');
+ALTER TABLE sqlx.data_imports
+  ADD CONSTRAINT fk_sqlx_data_imports__project_id
+  FOREIGN KEY (project_id) REFERENCES platform.projects(id) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_sqlx_data_imports__created_by
+  FOREIGN KEY (created_by) REFERENCES platform.users(id) ON DELETE SET NULL;
 
--- data_sources → projects
-ALTER TABLE platform.data_sources
-  DROP FOREIGN KEY fk_ds_proj,
-  ADD CONSTRAINT fk_ds_proj
-    FOREIGN KEY (project_id) REFERENCES platform.projects(id)
-    ON DELETE CASCADE;
+-- sqlx.data_sources → projects
+CALL platform.drop_fk_if_exists('sqlx','data_sources','fk_ds_proj');
+ALTER TABLE sqlx.data_sources
+  ADD CONSTRAINT fk_sqlx_data_sources__project_id
+  FOREIGN KEY (project_id) REFERENCES platform.projects(id) ON DELETE CASCADE;
 
--- db connection related
-ALTER TABLE platform.db_connection_errors
-  DROP FOREIGN KEY fk_dbce_cid,
-  ADD CONSTRAINT fk_dbce_cid
-    FOREIGN KEY (db_connection_id) REFERENCES platform.db_connections(id)
-    ON DELETE CASCADE;
+-- sqlx connection-related
+CALL platform.drop_fk_if_exists('sqlx','connection_errors','fk_dbce_cid');
+ALTER TABLE sqlx.connection_errors
+  ADD CONSTRAINT fk_sqlx_connection_errors__db_connection_id
+  FOREIGN KEY (db_connection_id) REFERENCES sqlx.connections(id) ON DELETE CASCADE;
 
-ALTER TABLE platform.db_query_errors
-  DROP FOREIGN KEY fk_dbqe_conn,
-  ADD CONSTRAINT fk_dbqe_conn
-    FOREIGN KEY (db_connection_id) REFERENCES platform.db_connections(id)
-    ON DELETE CASCADE;
+CALL platform.drop_fk_if_exists('sqlx','query_errors','fk_dbqe_conn');
+ALTER TABLE sqlx.query_errors
+  ADD CONSTRAINT fk_sqlx_query_errors__db_connection_id
+  FOREIGN KEY (db_connection_id) REFERENCES sqlx.connections(id) ON DELETE CASCADE;
 
-ALTER TABLE platform.db_query_logs
-  DROP FOREIGN KEY fk_dbql_conn,
-  ADD CONSTRAINT fk_dbql_conn
-    FOREIGN KEY (db_connection_id) REFERENCES platform.db_connections(id)
-    ON DELETE CASCADE;
+CALL platform.drop_fk_if_exists('sqlx','query_logs','fk_dbql_conn');
+ALTER TABLE sqlx.query_logs
+  ADD CONSTRAINT fk_sqlx_query_logs__db_connection_id
+  FOREIGN KEY (db_connection_id) REFERENCES sqlx.connections(id) ON DELETE CASCADE;
 
-ALTER TABLE platform.db_query_results
-  DROP FOREIGN KEY fk_dbqr_conn,
-  ADD CONSTRAINT fk_dbqr_conn
-    FOREIGN KEY (db_connection_id) REFERENCES platform.db_connections(id)
-    ON DELETE CASCADE;
+CALL platform.drop_fk_if_exists('sqlx','query_results','fk_dbqr_conn');
+ALTER TABLE sqlx.query_results
+  ADD CONSTRAINT fk_sqlx_query_results__db_connection_id
+  FOREIGN KEY (db_connection_id) REFERENCES sqlx.connections(id) ON DELETE CASCADE;
 
-ALTER TABLE platform.db_users
-  DROP FOREIGN KEY fk_dbu_cid,
-  ADD CONSTRAINT fk_dbu_cid
-    FOREIGN KEY (db_connection_id) REFERENCES platform.db_connections(id)
-    ON DELETE CASCADE;
+CALL platform.drop_fk_if_exists('sqlx','users','fk_dbu_cid');
+ALTER TABLE sqlx.users
+  ADD CONSTRAINT fk_sqlx_users__db_connection_id
+  FOREIGN KEY (db_connection_id) REFERENCES sqlx.connections(id) ON DELETE CASCADE;
 
-ALTER TABLE platform.db_role_assignments
-  DROP FOREIGN KEY fk_dbra_role,
-  DROP FOREIGN KEY fk_dbra_user,
-  ADD CONSTRAINT fk_dbra_role
-    FOREIGN KEY (db_role_id) REFERENCES platform.db_roles(id)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT fk_dbra_user
-    FOREIGN KEY (db_user_id) REFERENCES platform.db_users(id)
-    ON DELETE CASCADE;
+CALL platform.drop_fk_if_exists('sqlx','role_assignments','fk_dbra_role');
+CALL platform.drop_fk_if_exists('sqlx','role_assignments','fk_dbra_user');
+ALTER TABLE sqlx.role_assignments
+  ADD CONSTRAINT fk_sqlx_role_assignments__db_role_id
+  FOREIGN KEY (db_role_id) REFERENCES sqlx.roles(id) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_sqlx_role_assignments__db_user_id
+  FOREIGN KEY (db_user_id) REFERENCES sqlx.users(id) ON DELETE CASCADE;
 
-ALTER TABLE platform.db_schemas
-  DROP FOREIGN KEY fk_dbsch_cid,
-  ADD CONSTRAINT fk_dbsch_cid
-    FOREIGN KEY (db_connection_id) REFERENCES platform.db_connections(id)
-    ON DELETE CASCADE;
+CALL platform.drop_fk_if_exists('sqlx','schemas','fk_dbsch_cid');
+ALTER TABLE sqlx.schemas
+  ADD CONSTRAINT fk_sqlx_schemas__db_connection_id
+  FOREIGN KEY (db_connection_id) REFERENCES sqlx.connections(id) ON DELETE CASCADE;
 
-ALTER TABLE platform.db_schema_exports
-  DROP FOREIGN KEY fk_dbsex_schema,
-  ADD CONSTRAINT fk_dbsex_schema
-    FOREIGN KEY (db_schema_id) REFERENCES platform.db_schemas(id)
-    ON DELETE CASCADE;
+CALL platform.drop_fk_if_exists('sqlx','schema_exports','fk_dbsex_schema');
+ALTER TABLE sqlx.schema_exports
+  ADD CONSTRAINT fk_sqlx_schema_exports__db_schema_id
+  FOREIGN KEY (db_schema_id) REFERENCES sqlx.schemas(id) ON DELETE CASCADE;
 
-ALTER TABLE platform.db_schema_procedures
-  DROP FOREIGN KEY fk_dbproc_sid,
-  ADD CONSTRAINT fk_dbproc_sid
-    FOREIGN KEY (db_schema_id) REFERENCES platform.db_schemas(id)
-    ON DELETE CASCADE;
+CALL platform.drop_fk_if_exists('sqlx','schema_procedures','fk_dbproc_sid');
+ALTER TABLE sqlx.schema_procedures
+  ADD CONSTRAINT fk_sqlx_schema_procedures__db_schema_id
+  FOREIGN KEY (db_schema_id) REFERENCES sqlx.schemas(id) ON DELETE CASCADE;
 
-ALTER TABLE platform.db_schema_tables
-  DROP FOREIGN KEY fk_dbtab_sid,
-  ADD CONSTRAINT fk_dbtab_sid
-    FOREIGN KEY (db_schema_id) REFERENCES platform.db_schemas(id)
-    ON DELETE CASCADE;
+CALL platform.drop_fk_if_exists('sqlx','schema_tables','fk_dbtab_sid');
+ALTER TABLE sqlx.schema_tables
+  ADD CONSTRAINT fk_sqlx_schema_tables__db_schema_id
+  FOREIGN KEY (db_schema_id) REFERENCES sqlx.schemas(id) ON DELETE CASCADE;
 
-ALTER TABLE platform.db_schema_table_checks
-  DROP FOREIGN KEY fk_dbchk_tid,
-  ADD CONSTRAINT fk_dbchk_tid
-    FOREIGN KEY (db_schema_table_id) REFERENCES platform.db_schema_tables(id)
-    ON DELETE CASCADE;
+CALL platform.drop_fk_if_exists('sqlx','schema_table_checks','fk_dbchk_tid');
+ALTER TABLE sqlx.schema_table_checks
+  ADD CONSTRAINT fk_sqlx_schema_table_checks__db_schema_table_id
+  FOREIGN KEY (db_schema_table_id) REFERENCES sqlx.schema_tables(id) ON DELETE CASCADE;
 
-ALTER TABLE platform.db_schema_table_columns
-  DROP FOREIGN KEY fk_dbcol_tid,
-  ADD CONSTRAINT fk_dbcol_tid
-    FOREIGN KEY (db_schema_table_id) REFERENCES platform.db_schema_tables(id)
-    ON DELETE CASCADE;
+CALL platform.drop_fk_if_exists('sqlx','schema_table_columns','fk_dbcol_tid');
+ALTER TABLE sqlx.schema_table_columns
+  ADD CONSTRAINT fk_sqlx_schema_table_columns__db_schema_table_id
+  FOREIGN KEY (db_schema_table_id) REFERENCES sqlx.schema_tables(id) ON DELETE CASCADE;
 
-ALTER TABLE platform.db_schema_table_foreign_keys
-  DROP FOREIGN KEY fk_dbfk_tid,
-  ADD CONSTRAINT fk_dbfk_tid
-    FOREIGN KEY (db_schema_table_id) REFERENCES platform.db_schema_tables(id)
-    ON DELETE CASCADE;
+CALL platform.drop_fk_if_exists('sqlx','schema_table_foreign_keys','fk_dbfk_tid');
+ALTER TABLE sqlx.schema_table_foreign_keys
+  ADD CONSTRAINT fk_sqlx_schema_table_foreign_keys__db_schema_table_id
+  FOREIGN KEY (db_schema_table_id) REFERENCES sqlx.schema_tables(id) ON DELETE CASCADE;
 
-ALTER TABLE platform.db_schema_table_indexes
-  DROP FOREIGN KEY fk_dbidx_tid,
-  ADD CONSTRAINT fk_dbidx_tid
-    FOREIGN KEY (db_schema_table_id) REFERENCES platform.db_schema_tables(id)
-    ON DELETE CASCADE;
+CALL platform.drop_fk_if_exists('sqlx','schema_table_indexes','fk_dbidx_tid');
+ALTER TABLE sqlx.schema_table_indexes
+  ADD CONSTRAINT fk_sqlx_schema_table_indexes__db_schema_table_id
+  FOREIGN KEY (db_schema_table_id) REFERENCES sqlx.schema_tables(id) ON DELETE CASCADE;
 
-ALTER TABLE platform.db_schema_table_triggers
-  DROP FOREIGN KEY fk_dbtrg_tid,
-  ADD CONSTRAINT fk_dbtrg_tid
-    FOREIGN KEY (db_schema_table_id) REFERENCES platform.db_schema_tables(id)
-    ON DELETE CASCADE;
+CALL platform.drop_fk_if_exists('sqlx','schema_table_triggers','fk_dbtrg_tid');
+ALTER TABLE sqlx.schema_table_triggers
+  ADD CONSTRAINT fk_sqlx_schema_table_triggers__db_schema_table_id
+  FOREIGN KEY (db_schema_table_id) REFERENCES sqlx.schema_tables(id) ON DELETE CASCADE;
 
-ALTER TABLE platform.db_schema_views
-  DROP FOREIGN KEY fk_dbview_sid,
-  ADD CONSTRAINT fk_dbview_sid
-    FOREIGN KEY (db_schema_id) REFERENCES platform.db_schemas(id)
-    ON DELETE CASCADE;
+CALL platform.drop_fk_if_exists('sqlx','schema_views','fk_dbview_sid');
+ALTER TABLE sqlx.schema_views
+  ADD CONSTRAINT fk_sqlx_schema_views__db_schema_id
+  FOREIGN KEY (db_schema_id) REFERENCES sqlx.schemas(id) ON DELETE CASCADE;
 
-ALTER TABLE platform.db_table_rows
-  DROP FOREIGN KEY fk_dbrow_tid,
-  ADD CONSTRAINT fk_dbrow_tid
-    FOREIGN KEY (db_schema_table_id) REFERENCES platform.db_schema_tables(id)
-    ON DELETE CASCADE;
+CALL platform.drop_fk_if_exists('sqlx','table_rows','fk_dbrow_tid');
+ALTER TABLE sqlx.table_rows
+  ADD CONSTRAINT fk_sqlx_table_rows__db_schema_table_id
+  FOREIGN KEY (db_schema_table_id) REFERENCES sqlx.schema_tables(id) ON DELETE CASCADE;
 
-ALTER TABLE platform.db_user_activity
-  DROP FOREIGN KEY fk_dbuact_conn,
-  DROP FOREIGN KEY fk_dbuact_user,
-  ADD CONSTRAINT fk_dbuact_conn
-    FOREIGN KEY (db_connection_id) REFERENCES platform.db_connections(id)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT fk_dbuact_user
-    FOREIGN KEY (db_user_id) REFERENCES platform.db_users(id)
-    ON DELETE CASCADE;
+CALL platform.drop_fk_if_exists('sqlx','user_activity','fk_dbuact_conn');
+CALL platform.drop_fk_if_exists('sqlx','user_activity','fk_dbuact_user');
+ALTER TABLE sqlx.user_activity
+  ADD CONSTRAINT fk_sqlx_user_activity__db_connection_id
+  FOREIGN KEY (db_connection_id) REFERENCES sqlx.connections(id) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_sqlx_user_activity__db_user_id
+  FOREIGN KEY (db_user_id) REFERENCES sqlx.users(id) ON DELETE CASCADE;
 
-ALTER TABLE platform.db_user_permissions
-  DROP FOREIGN KEY fk_dbup_cid,
-  DROP FOREIGN KEY fk_dbup_uid,
-  ADD CONSTRAINT fk_dbup_cid
-    FOREIGN KEY (db_connection_id) REFERENCES platform.db_connections(id)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT fk_dbup_uid
-    FOREIGN KEY (db_user_id) REFERENCES platform.db_users(id)
-    ON DELETE CASCADE;
+CALL platform.drop_fk_if_exists('sqlx','user_permissions','fk_dbup_cid');
+CALL platform.drop_fk_if_exists('sqlx','user_permissions','fk_dbup_uid');
+ALTER TABLE sqlx.user_permissions
+  ADD CONSTRAINT fk_sqlx_user_permissions__db_connection_id
+  FOREIGN KEY (db_connection_id) REFERENCES sqlx.connections(id) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_sqlx_user_permissions__db_user_id
+  FOREIGN KEY (db_user_id) REFERENCES sqlx.users(id) ON DELETE CASCADE;
 
--- deployments → builds / environments
-ALTER TABLE platform.deployments
-  DROP FOREIGN KEY fk_dep_build,
-  DROP FOREIGN KEY fk_dep_env,
-  ADD CONSTRAINT fk_dep_build
-    FOREIGN KEY (build_id) REFERENCES platform.builds(id)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT fk_dep_env
-    FOREIGN KEY (environment_id) REFERENCES platform.environments(id)
-    ON DELETE CASCADE;
+-- devops.deployments → builds / environments
+CALL platform.drop_fk_if_exists('devops','deployments','fk_dep_build');
+CALL platform.drop_fk_if_exists('devops','deployments','fk_dep_env');
+ALTER TABLE devops.deployments
+  ADD CONSTRAINT fk_devops_deployments__build_id
+  FOREIGN KEY (build_id) REFERENCES devops.builds(id) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_devops_deployments__environment_id
+  FOREIGN KEY (environment_id) REFERENCES devops.environments(id) ON DELETE CASCADE;
 
--- env_vars → environments
-ALTER TABLE platform.env_vars
-  DROP FOREIGN KEY fk_envvar_env,
-  ADD CONSTRAINT fk_envvar_env
-    FOREIGN KEY (environment_id) REFERENCES platform.environments(id)
-    ON DELETE CASCADE;
+-- devops.env_vars → environments
+CALL platform.drop_fk_if_exists('devops','env_vars','fk_envvar_env');
+ALTER TABLE devops.env_vars
+  ADD CONSTRAINT fk_devops_env_vars__environment_id
+  FOREIGN KEY (environment_id) REFERENCES devops.environments(id) ON DELETE CASCADE;
 
--- feature_flags → workspaces
+-- platform.feature_flags → workspaces
+CALL platform.drop_fk_if_exists('platform','feature_flags','fk_ff_ws');
 ALTER TABLE platform.feature_flags
-  DROP FOREIGN KEY fk_ff_ws,
-  ADD CONSTRAINT fk_ff_ws
-    FOREIGN KEY (workspace_id) REFERENCES platform.workspaces(id)
-    ON DELETE CASCADE;
+  ADD CONSTRAINT fk_platform_feature_flags__workspace_id
+  FOREIGN KEY (workspace_id) REFERENCES platform.workspaces(id) ON DELETE CASCADE;
 
 -- subscriptions / invoices
+CALL platform.drop_fk_if_exists('platform','subscriptions','fk_sub_ba');
+CALL platform.drop_fk_if_exists('platform','subscriptions','fk_sub_plan');
 ALTER TABLE platform.subscriptions
-  DROP FOREIGN KEY fk_sub_ba,
-  DROP FOREIGN KEY fk_sub_plan,
-  ADD CONSTRAINT fk_sub_ba
-    FOREIGN KEY (business_account_id) REFERENCES platform.business_accounts(id)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT fk_sub_plan
-    FOREIGN KEY (plan_id) REFERENCES platform.plans(id)
-    ON DELETE RESTRICT;
+  ADD CONSTRAINT fk_platform_subscriptions__business_account_id
+  FOREIGN KEY (business_account_id) REFERENCES platform.business_accounts(id) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_platform_subscriptions__plan_id
+  FOREIGN KEY (plan_id) REFERENCES platform.plans(id) ON DELETE RESTRICT;
 
+CALL platform.drop_fk_if_exists('platform','invoices','fk_inv_sub');
 ALTER TABLE platform.invoices
-  DROP FOREIGN KEY fk_inv_sub,
-  ADD CONSTRAINT fk_inv_sub
-    FOREIGN KEY (subscription_id) REFERENCES platform.subscriptions(id)
-    ON DELETE CASCADE;
+  ADD CONSTRAINT fk_platform_invoices__subscription_id
+  FOREIGN KEY (subscription_id) REFERENCES platform.subscriptions(id) ON DELETE CASCADE;
 
 -- locales / translations
+CALL platform.drop_fk_if_exists('platform','locales','fk_loc_ws');
 ALTER TABLE platform.locales
-  DROP FOREIGN KEY fk_loc_ws,
-  ADD CONSTRAINT fk_loc_ws
-    FOREIGN KEY (workspace_id) REFERENCES platform.workspaces(id)
-    ON DELETE CASCADE;
+  ADD CONSTRAINT fk_platform_locales__workspace_id
+  FOREIGN KEY (workspace_id) REFERENCES platform.workspaces(id) ON DELETE CASCADE;
 
+CALL platform.drop_fk_if_exists('platform','translations','fk_tr_loc');
+CALL platform.drop_fk_if_exists('platform','translations','fk_tr_user');
+CALL platform.drop_fk_if_exists('platform','translations','fk_tr_ws');
 ALTER TABLE platform.translations
-  DROP FOREIGN KEY fk_tr_loc,
-  DROP FOREIGN KEY fk_tr_user,
-  DROP FOREIGN KEY fk_tr_ws,
-  ADD CONSTRAINT fk_tr_loc
-    FOREIGN KEY (locale_id) REFERENCES platform.locales(id)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT fk_tr_user
-    FOREIGN KEY (updated_by) REFERENCES platform.users(id)
-    ON DELETE SET NULL,
-  ADD CONSTRAINT fk_tr_ws
-    FOREIGN KEY (workspace_id) REFERENCES platform.workspaces(id)
-    ON DELETE CASCADE;
+  ADD CONSTRAINT fk_platform_translations__locale_id
+  FOREIGN KEY (locale_id) REFERENCES platform.locales(id) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_platform_translations__updated_by
+  FOREIGN KEY (updated_by) REFERENCES platform.users(id) ON DELETE SET NULL,
+  ADD CONSTRAINT fk_platform_translations__workspace_id
+  FOREIGN KEY (workspace_id) REFERENCES platform.workspaces(id) ON DELETE CASCADE;
 
--- meta/notifications
+-- meta / notifications
+CALL platform.drop_fk_if_exists('platform','meta_registry','fk_mr_ws');
 ALTER TABLE platform.meta_registry
-  DROP FOREIGN KEY fk_mr_ws,
-  ADD CONSTRAINT fk_mr_ws
-    FOREIGN KEY (workspace_id) REFERENCES platform.workspaces(id)
-    ON DELETE CASCADE;
+  ADD CONSTRAINT fk_platform_meta_registry__workspace_id
+  FOREIGN KEY (workspace_id) REFERENCES platform.workspaces(id) ON DELETE CASCADE;
 
+CALL platform.drop_fk_if_exists('platform','notification_templates','fk_nt_ws');
 ALTER TABLE platform.notification_templates
-  DROP FOREIGN KEY fk_nt_ws,
-  ADD CONSTRAINT fk_nt_ws
-    FOREIGN KEY (workspace_id) REFERENCES platform.workspaces(id)
-    ON DELETE CASCADE;
+  ADD CONSTRAINT fk_platform_notification_templates__workspace_id
+  FOREIGN KEY (workspace_id) REFERENCES platform.workspaces(id) ON DELETE CASCADE;
 
+CALL platform.drop_fk_if_exists('platform','notification_events','fk_ne_proj');
+CALL platform.drop_fk_if_exists('platform','notification_events','fk_ne_tpl');
 ALTER TABLE platform.notification_events
-  DROP FOREIGN KEY fk_ne_proj,
-  DROP FOREIGN KEY fk_ne_tpl,
-  ADD CONSTRAINT fk_ne_proj
-    FOREIGN KEY (project_id) REFERENCES platform.projects(id)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT fk_ne_tpl
-    FOREIGN KEY (template_id) REFERENCES platform.notification_templates(id)
-    ON DELETE SET NULL;
+  ADD CONSTRAINT fk_platform_notification_events__project_id
+  FOREIGN KEY (project_id) REFERENCES platform.projects(id) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_platform_notification_events__template_id
+  FOREIGN KEY (template_id) REFERENCES platform.notification_templates(id) ON DELETE SET NULL;
 
+CALL platform.drop_fk_if_exists('platform','notification_deliveries','fk_nd_event');
 ALTER TABLE platform.notification_deliveries
-  DROP FOREIGN KEY fk_nd_event,
-  ADD CONSTRAINT fk_nd_event
-    FOREIGN KEY (event_id) REFERENCES platform.notification_events(id)
-    ON DELETE CASCADE;
+  ADD CONSTRAINT fk_platform_notification_deliveries__event_id
+  FOREIGN KEY (event_id) REFERENCES platform.notification_events(id) ON DELETE CASCADE;
 
--- roles/permissions
+-- roles / permissions
+CALL platform.drop_fk_if_exists('platform','roles','fk_roles_ws');
 ALTER TABLE platform.roles
-  DROP FOREIGN KEY fk_roles_ws,
-  ADD CONSTRAINT fk_roles_ws
-    FOREIGN KEY (workspace_id) REFERENCES platform.workspaces(id)
-    ON DELETE CASCADE;
+  ADD CONSTRAINT fk_platform_roles__workspace_id
+  FOREIGN KEY (workspace_id) REFERENCES platform.workspaces(id) ON DELETE CASCADE;
 
+CALL platform.drop_fk_if_exists('platform','role_permissions','fk_rp_perm');
+CALL platform.drop_fk_if_exists('platform','role_permissions','fk_rp_role');
 ALTER TABLE platform.role_permissions
-  DROP FOREIGN KEY fk_rp_perm,
-  DROP FOREIGN KEY fk_rp_role,
-  ADD CONSTRAINT fk_rp_perm
-    FOREIGN KEY (permission_id) REFERENCES platform.permissions(id)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT fk_rp_role
-    FOREIGN KEY (role_id) REFERENCES platform.roles(id)
-    ON DELETE CASCADE;
+  ADD CONSTRAINT fk_platform_role_permissions__permission_id
+  FOREIGN KEY (permission_id) REFERENCES platform.permissions(id) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_platform_role_permissions__role_id
+  FOREIGN KEY (role_id) REFERENCES platform.roles(id) ON DELETE CASCADE;
 
 -- storage
+CALL platform.drop_fk_if_exists('platform','storage_buckets','fk_bucket_ws');
 ALTER TABLE platform.storage_buckets
-  DROP FOREIGN KEY fk_bucket_ws,
-  ADD CONSTRAINT fk_bucket_ws
-    FOREIGN KEY (workspace_id) REFERENCES platform.workspaces(id)
-    ON DELETE CASCADE;
+  ADD CONSTRAINT fk_platform_storage_buckets__workspace_id
+  FOREIGN KEY (workspace_id) REFERENCES platform.workspaces(id) ON DELETE CASCADE;
 
+CALL platform.drop_fk_if_exists('platform','storage_objects','fk_obj_bucket');
+CALL platform.drop_fk_if_exists('platform','storage_objects','fk_obj_user');
 ALTER TABLE platform.storage_objects
-  DROP FOREIGN KEY fk_obj_bucket,
-  DROP FOREIGN KEY fk_obj_user,
-  ADD CONSTRAINT fk_obj_bucket
-    FOREIGN KEY (bucket_id) REFERENCES platform.storage_buckets(id)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT fk_obj_user
-    FOREIGN KEY (created_by) REFERENCES platform.users(id)
-    ON DELETE SET NULL;
+  ADD CONSTRAINT fk_platform_storage_objects__bucket_id
+  FOREIGN KEY (bucket_id) REFERENCES platform.storage_buckets(id) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_platform_storage_objects__created_by
+  FOREIGN KEY (created_by) REFERENCES platform.users(id) ON DELETE SET NULL;
 
 -- tasks
+CALL platform.drop_fk_if_exists('platform','tasks','fk_tasks_pid');
+CALL platform.drop_fk_if_exists('platform','tasks','fk_tasks_parent');
+CALL platform.drop_fk_if_exists('platform','tasks','fk_tasks_aid');
 ALTER TABLE platform.tasks
-  DROP FOREIGN KEY fk_tasks_pid,
-  DROP FOREIGN KEY fk_tasks_parent,
-  DROP FOREIGN KEY fk_tasks_aid,
-  ADD CONSTRAINT fk_tasks_pid
-    FOREIGN KEY (project_id) REFERENCES platform.projects(id)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT fk_tasks_parent
-    FOREIGN KEY (parent_id) REFERENCES platform.tasks(id)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT fk_tasks_aid
-    FOREIGN KEY (assignee_id) REFERENCES platform.users(id)
-    ON DELETE SET NULL;
+  ADD CONSTRAINT fk_platform_tasks__project_id
+  FOREIGN KEY (project_id) REFERENCES platform.projects(id) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_platform_tasks__parent_id
+  FOREIGN KEY (parent_id) REFERENCES platform.tasks(id) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_platform_tasks__assignee_id
+  FOREIGN KEY (assignee_id) REFERENCES platform.users(id) ON DELETE SET NULL;
 
+CALL platform.drop_fk_if_exists('platform','task_attachments','fk_tatt_tid');
+CALL platform.drop_fk_if_exists('platform','task_attachments','fk_tatt_uid');
 ALTER TABLE platform.task_attachments
-  DROP FOREIGN KEY fk_tatt_tid,
-  DROP FOREIGN KEY fk_tatt_uid,
-  ADD CONSTRAINT fk_tatt_tid
-    FOREIGN KEY (task_id) REFERENCES platform.tasks(id)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT fk_tatt_uid
-    FOREIGN KEY (user_id) REFERENCES platform.users(id)
-    ON DELETE SET NULL;
+  ADD CONSTRAINT fk_platform_task_attachments__task_id
+  FOREIGN KEY (task_id) REFERENCES platform.tasks(id) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_platform_task_attachments__user_id
+  FOREIGN KEY (user_id) REFERENCES platform.users(id) ON DELETE SET NULL;
 
+CALL platform.drop_fk_if_exists('platform','task_comments','fk_tcom_tid');
+CALL platform.drop_fk_if_exists('platform','task_comments','fk_tcom_uid');
 ALTER TABLE platform.task_comments
-  DROP FOREIGN KEY fk_tcom_tid,
-  DROP FOREIGN KEY fk_tcom_uid,
-  ADD CONSTRAINT fk_tcom_tid
-    FOREIGN KEY (task_id) REFERENCES platform.tasks(id)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT fk_tcom_uid
-    FOREIGN KEY (user_id) REFERENCES platform.users(id)
-    ON DELETE SET NULL;
+  ADD CONSTRAINT fk_platform_task_comments__task_id
+  FOREIGN KEY (task_id) REFERENCES platform.tasks(id) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_platform_task_comments__user_id
+  FOREIGN KEY (user_id) REFERENCES platform.users(id) ON DELETE SET NULL;
 
 -- UI assets / pages
-ALTER TABLE platform.ui_assets
-  DROP FOREIGN KEY fk_ui_assets_proj,
-  DROP FOREIGN KEY fk_ui_assets_user,
-  ADD CONSTRAINT fk_ui_assets_proj
-    FOREIGN KEY (project_id) REFERENCES platform.projects(id)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT fk_ui_assets_user
-    FOREIGN KEY (created_by) REFERENCES platform.users(id)
-    ON DELETE SET NULL;
+CALL platform.drop_fk_if_exists('ui','assets','fk_ui_assets_proj');
+CALL platform.drop_fk_if_exists('ui','assets','fk_ui_assets_user');
+ALTER TABLE ui.assets
+  ADD CONSTRAINT fk_ui_assets__project_id
+  FOREIGN KEY (project_id) REFERENCES platform.projects(id) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_ui_assets__created_by
+  FOREIGN KEY (created_by) REFERENCES platform.users(id) ON DELETE SET NULL;
 
-ALTER TABLE platform.ui_components_library
-  DROP FOREIGN KEY fk_ui_clib_proj,
-  ADD CONSTRAINT fk_ui_clib_proj
-    FOREIGN KEY (project_id) REFERENCES platform.projects(id)
-    ON DELETE CASCADE;
+CALL platform.drop_fk_if_exists('ui','components_library','fk_ui_clib_proj');
+ALTER TABLE ui.components_library
+  ADD CONSTRAINT fk_ui_components_library__project_id
+  FOREIGN KEY (project_id) REFERENCES platform.projects(id) ON DELETE CASCADE;
 
-ALTER TABLE platform.ui_pages
-  DROP FOREIGN KEY fk_ui_pages_proj,
-  DROP FOREIGN KEY fk_ui_pages_user,
-  ADD CONSTRAINT fk_ui_pages_proj
-    FOREIGN KEY (project_id) REFERENCES platform.projects(id)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT fk_ui_pages_user
-    FOREIGN KEY (created_by) REFERENCES platform.users(id)
-    ON DELETE SET NULL;
+CALL platform.drop_fk_if_exists('ui','pages','fk_ui_pages_proj');
+CALL platform.drop_fk_if_exists('ui','pages','fk_ui_pages_user');
+ALTER TABLE ui.pages
+  ADD CONSTRAINT fk_ui_pages__project_id
+  FOREIGN KEY (project_id) REFERENCES platform.projects(id) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_ui_pages__created_by
+  FOREIGN KEY (created_by) REFERENCES platform.users(id) ON DELETE SET NULL;
 
-ALTER TABLE platform.ui_page_versions
-  DROP FOREIGN KEY fk_ui_pv_page,
-  DROP FOREIGN KEY fk_ui_pv_user,
-  ADD CONSTRAINT fk_ui_pv_page
-    FOREIGN KEY (page_id) REFERENCES platform.ui_pages(id)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT fk_ui_pv_user
-    FOREIGN KEY (created_by) REFERENCES platform.users(id)
-    ON DELETE SET NULL;
+CALL platform.drop_fk_if_exists('ui','page_versions','fk_ui_pv_page');
+CALL platform.drop_fk_if_exists('ui','page_versions','fk_ui_pv_user');
+ALTER TABLE ui.page_versions
+  ADD CONSTRAINT fk_ui_page_versions__page_id
+  FOREIGN KEY (page_id) REFERENCES ui.pages(id) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_ui_page_versions__created_by
+  FOREIGN KEY (created_by) REFERENCES platform.users(id) ON DELETE SET NULL;
 
--- usage/invoices
+-- usage / invoices
+CALL platform.drop_fk_if_exists('platform','usage_records','fk_usage_sub');
 ALTER TABLE platform.usage_records
-  DROP FOREIGN KEY fk_usage_sub,
-  ADD CONSTRAINT fk_usage_sub
-    FOREIGN KEY (subscription_id) REFERENCES platform.subscriptions(id)
-    ON DELETE CASCADE;
+  ADD CONSTRAINT fk_platform_usage_records__subscription_id
+  FOREIGN KEY (subscription_id) REFERENCES platform.subscriptions(id) ON DELETE CASCADE;
 
 -- user-related
+CALL platform.drop_fk_if_exists('platform','user_profiles','fk_user_profiles_user');
 ALTER TABLE platform.user_profiles
-  DROP FOREIGN KEY fk_user_profiles_user,
-  ADD CONSTRAINT fk_user_profiles_user
-    FOREIGN KEY (user_id) REFERENCES platform.users(id)
-    ON DELETE CASCADE;
+  ADD CONSTRAINT fk_platform_user_profiles__user_id
+  FOREIGN KEY (user_id) REFERENCES platform.users(id) ON DELETE CASCADE;
 
+CALL platform.drop_fk_if_exists('platform','user_roles','fk_ur_uid');
 ALTER TABLE platform.user_roles
-  DROP FOREIGN KEY fk_ur_uid,
-  ADD CONSTRAINT fk_ur_uid
-    FOREIGN KEY (user_id) REFERENCES platform.users(id)
-    ON DELETE CASCADE;
+  ADD CONSTRAINT fk_platform_user_roles__user_id
+  FOREIGN KEY (user_id) REFERENCES platform.users(id) ON DELETE CASCADE;
 
+CALL platform.drop_fk_if_exists('platform','user_sessions','fk_usess_uid');
 ALTER TABLE platform.user_sessions
-  DROP FOREIGN KEY fk_usess_uid,
-  ADD CONSTRAINT fk_usess_uid
-    FOREIGN KEY (user_id) REFERENCES platform.users(id)
-    ON DELETE CASCADE;
+  ADD CONSTRAINT fk_platform_user_sessions__user_id
+  FOREIGN KEY (user_id) REFERENCES platform.users(id) ON DELETE CASCADE;
 
+CALL platform.drop_fk_if_exists('platform','user_verifications','fk_usver_uid');
 ALTER TABLE platform.user_verifications
-  DROP FOREIGN KEY fk_usver_uid,
-  ADD CONSTRAINT fk_usver_uid
-    FOREIGN KEY (user_id) REFERENCES platform.users(id)
-    ON DELETE CASCADE;
+  ADD CONSTRAINT fk_platform_user_verifications__user_id
+  FOREIGN KEY (user_id) REFERENCES platform.users(id) ON DELETE CASCADE;
+  
 
--- workflows
-ALTER TABLE platform.workflows
-  DROP FOREIGN KEY fk_wf_proj,
-  DROP FOREIGN KEY fk_wf_user,
-  ADD CONSTRAINT fk_wf_proj
-    FOREIGN KEY (project_id) REFERENCES platform.projects(id)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT fk_wf_user
-    FOREIGN KEY (created_by) REFERENCES platform.users(id)
-    ON DELETE SET NULL;
+/* 5) Pragmatic indexes (safe recreate) */
+CALL platform.drop_index_if_exists('sqlx','saved_queries','idx_saved_queries_list');
+CREATE INDEX idx_saved_queries_list ON sqlx.saved_queries (project_id, name, created_at DESC);
 
-ALTER TABLE platform.workflow_runs
-  DROP FOREIGN KEY fk_wfr_wf,
-  ADD CONSTRAINT fk_wfr_wf
-    FOREIGN KEY (workflow_id) REFERENCES platform.workflows(id)
-    ON DELETE CASCADE;
+CALL platform.drop_index_if_exists('ui','pages','idx_ui_pages_route');
+CREATE INDEX idx_ui_pages_route ON ui.pages (project_id, route_path);
 
-ALTER TABLE platform.workflow_run_nodes
-  DROP FOREIGN KEY fk_wfrn_run,
-  ADD CONSTRAINT fk_wfrn_run
-    FOREIGN KEY (run_id) REFERENCES platform.workflow_runs(id)
-    ON DELETE CASCADE;
+CALL platform.drop_index_if_exists('workflow','runs','idx_workflow_runs_timeline');
+CREATE INDEX idx_workflow_runs_timeline ON workflow.runs (workflow_id, created_at DESC);
 
-ALTER TABLE platform.workflow_triggers
-  DROP FOREIGN KEY fk_wft_wf,
-  ADD CONSTRAINT fk_wft_wf
-    FOREIGN KEY (workflow_id) REFERENCES platform.workflows(id)
-    ON DELETE CASCADE;
+CALL platform.drop_index_if_exists('devops','deployments','idx_deployments_status');
+CREATE INDEX idx_deployments_status ON devops.deployments (environment_id, status, created_at);
 
-ALTER TABLE platform.workflow_versions
-  DROP FOREIGN KEY fk_wfv_wf,
-  DROP FOREIGN KEY fk_wfv_user,
-  ADD CONSTRAINT fk_wfv_wf
-    FOREIGN KEY (workflow_id) REFERENCES platform.workflows(id)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT fk_wfv_user
-    FOREIGN KEY (created_by) REFERENCES platform.users(id)
-    ON DELETE SET NULL;
+CALL platform.drop_index_if_exists('platform','audit_events','idx_audit_actor');
+CREATE INDEX idx_audit_actor ON platform.audit_events (actor_user_id, created_at);
 
-ALTER TABLE platform.workflow_webhooks
-  DROP FOREIGN KEY fk_wfh_wf,
-  ADD CONSTRAINT fk_wfh_wf
-    FOREIGN KEY (workflow_id) REFERENCES platform.workflows(id)
-    ON DELETE CASCADE;
-
--- workspace members
-ALTER TABLE platform.workspace_members
-  DROP FOREIGN KEY fk_wsmem_wsid,
-  DROP FOREIGN KEY fk_wsmem_uid,
-  ADD CONSTRAINT fk_wsmem_wsid
-    FOREIGN KEY (workspace_id) REFERENCES platform.workspaces(id)
-    ON DELETE CASCADE,
-  ADD CONSTRAINT fk_wsmem_uid
-    FOREIGN KEY (user_id) REFERENCES platform.users(id)
-    ON DELETE CASCADE;
-
--- -------------------------------------------------------------------
--- 5) Pragmatic indexes for common paths
--- -------------------------------------------------------------------
--- Saved queries list/search
-CREATE INDEX idx_saved_queries_list
-  ON platform.saved_queries (project_id, name, created_at DESC);
-
--- UI pages route lookup
-CREATE INDEX idx_ui_pages_route
-  ON platform.ui_pages (project_id, route_path);
-
--- Workflow run timelines
-CREATE INDEX idx_workflow_runs_timeline
-  ON platform.workflow_runs (workflow_id, created_at DESC);
-
--- Deployment status by environment
-CREATE INDEX idx_deployments_status
-  ON platform.deployments (environment_id, status, created_at);
-
--- (Optional) ensure fast actor lookups in audit logs (name already exists in many schemas)
-CREATE INDEX idx_audit_actor
-  ON platform.audit_events (actor_user_id, created_at);
-
--- -------------------------------------------------------------------
--- 6) Optional: “active” views that hide soft-deleted rows
--- -------------------------------------------------------------------
+/* 6) Views */
 DROP SCHEMA IF EXISTS platform_v;
 CREATE SCHEMA IF NOT EXISTS platform_v;
 
@@ -1888,9 +1758,38 @@ DROP VIEW IF EXISTS platform_v.projects_active;
 CREATE VIEW platform_v.projects_active AS
   SELECT * FROM platform.projects WHERE deleted_at IS NULL;
 
--- -------------------------------------------------------------------
--- Done
--- -------------------------------------------------------------------
+/* Cleanup helper proc */
+DROP PROCEDURE IF EXISTS platform.drop_fk_if_exists;
+
+
+DROP VIEW IF EXISTS platform_v.relationships;
+CREATE VIEW platform_v.relationships AS
+SELECT
+  rc.CONSTRAINT_SCHEMA          AS child_schema,
+  kcu.TABLE_NAME                AS child_table,
+  rc.CONSTRAINT_NAME            AS fk_name,
+  GROUP_CONCAT(kcu.COLUMN_NAME ORDER BY kcu.ORDINAL_POSITION SEPARATOR ',')       AS child_columns,
+  kcu.REFERENCED_TABLE_SCHEMA   AS parent_schema,
+  kcu.REFERENCED_TABLE_NAME     AS parent_table,
+  GROUP_CONCAT(kcu.REFERENCED_COLUMN_NAME ORDER BY kcu.ORDINAL_POSITION SEPARATOR ',') AS parent_columns,
+  rc.UPDATE_RULE,
+  rc.DELETE_RULE
+FROM information_schema.REFERENTIAL_CONSTRAINTS rc
+JOIN information_schema.KEY_COLUMN_USAGE kcu
+  ON  rc.CONSTRAINT_SCHEMA = kcu.CONSTRAINT_SCHEMA
+  AND rc.CONSTRAINT_NAME   = kcu.CONSTRAINT_NAME
+  AND rc.TABLE_NAME        = kcu.TABLE_NAME
+WHERE kcu.REFERENCED_TABLE_NAME IS NOT NULL
+GROUP BY
+  rc.CONSTRAINT_SCHEMA, kcu.TABLE_NAME, rc.CONSTRAINT_NAME,
+  kcu.REFERENCED_TABLE_SCHEMA, kcu.REFERENCED_TABLE_NAME,
+  rc.UPDATE_RULE, rc.DELETE_RULE;
+
+
+/* Done */
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
+
+
+

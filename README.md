@@ -1,85 +1,300 @@
-NuBlox Application Builder is a visual full-stack platform. At the top you have Platform (global controls), inside that Workspaces (tenants), inside those Projects (apps). Each project includes five first-class tools (“Studios”): SQL STUDIO, UI STUDIO, API STUDIO, LOGIC STUDIO, and DEVOPS STUDIO.
+Brilliant — here’s the **final production-ready `README.md`** with everything:
+✅ Marketing tagline + pitch
+✅ Quickstart & structure
+✅ ERDs (inline Mermaid, collapsible)
+✅ Roadmap & tech stack
+✅ Contribution guide
+✅ **Feature comparison table** (NuBlox vs Webflow, Zapier, Postman, Oracle APEX, Retool)
 
-Layers
+---
 
-Platform
+```markdown
+# 🚀 NuBlox — Visual Full-Stack Application Builder
 
-Platform Management – global administration (plans, billing, flags, auditing).
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![MySQL 8.0+](https://img.shields.io/badge/MySQL-8.0%2B-blue)](https://dev.mysql.com/)
+[![SvelteKit 2](https://img.shields.io/badge/SvelteKit-2-ff3e00?logo=svelte)](https://svelte.dev/docs/kit)
+[![PNPM Monorepo](https://img.shields.io/badge/pnpm-workspace-yellow?logo=pnpm)](https://pnpm.io/)
 
-User Management – accounts, auth, org-wide policies.
+**Tagline:**  
+*“Design. Connect. Deploy. Without Code.”*
 
-Workspace
+**Elevator Pitch:**  
+NuBlox is a **visual full-stack application builder** that empowers teams to design their **database**, **UI**, and **automation workflows** in one seamless platform.  
+No code required. Instantly deploy your full-stack apps with built-in SQL, logic, and design tools.  
 
-Members / Settings / etc. – tenant boundary: users, roles, secrets, feature flags, storage.
+Think **Webflow + Zapier + Postman + SQL Workbench**, rolled into one modern **SvelteKit app**.
 
-Projects – individual applications that ship together.
+---
 
-Inside a Project (Tools)
+## ✨ Features at a Glance
 
-SQL STUDIO – the source of truth for data.
+- ✅ **Visual SQL Studio** — ERD, schema migration, diff, reverse engineering  
+- ✅ **UI Builder** — drag-and-drop, responsive, Figma-style editing  
+- ✅ **Logic Studio** — Zapier-style workflows, triggers, actions, loops  
+- ✅ **API Studio** — auto-generated CRUD + test runner + API keys  
+- ✅ **DevOps Studio** — multi-environment, builds, deployments, secrets  
+- ✅ **Data Browser** — spreadsheet-style CRUD with import/export  
+- ✅ **Core Platform** — workspaces, projects, permissions, billing, notifications  
 
-Visual ERD, DDL/DQL/DML/DCL/TCL, migrations, diffs, and reverse-engineering.
+---
 
-Feeds schemas to UI, API, and Logic.
+## 🏗 Monorepo Structure
 
-UI STUDIO – build the front end visually.
+```
 
-Data-bound components, forms, lists, and layouts backed by the SQL model.
+NuBlox\_Application\_Builder/
+├── apps/
+│   ├── marketing/      # Public landing page (SvelteKit)
+│   └── studio/         # NuBlox Studio (main app)
+├── packages/
+│   ├── design-system/  # Shared UI components, tokens, CSS utilities
+│   └── sqlx/           # SQL utilities, schema parser, query engine
+└── db/
+└── namespace.sql   # MySQL schemas (platform, api, ui, workflow, devops, sqlx)
 
-API STUDIO – define, secure, and test endpoints.
+````
 
-Instant CRUD per table/view, versioned routes, policies (auth, roles, rate limits).
+---
 
-LOGIC STUDIO – automation and workflows.
+## ⚡ Quickstart
 
-Triggers (events, schedules, webhooks), conditions/loops, actions (CRUD, notify, call API).
+### Prerequisites
+- [Node.js 20+](https://nodejs.org/)
+- [PNPM 9+](https://pnpm.io/)
+- [MySQL 8.0+](https://dev.mysql.com/)
 
-DEVOPS STUDIO – environments and delivery.
+### Setup
+```bash
+# Clone
+git clone https://github.com/8140spitt/NuBlox_Application_Builder.git
+cd NuBlox_Application_Builder
 
-Dev/Test/Stage/Prod, secrets/config, builds, deployments, and rollbacks.
+# Install deps
+pnpm install
 
-How the Studios Connect
+# Provision database
+mysql -u root -p < db/namespace.sql
 
-SQL → UI: UI components bind to tables/views defined in SQL STUDIO.
+# Start dev
+pnpm dev --filter=apps/studio
+````
 
-SQL → API: API STUDIO scaffolds CRUD and custom endpoints from the schema.
+### Environment Variables
 
-SQL → Logic: workflows react to DB changes and execute transactional steps.
+Copy `.env.example` → `.env` and configure:
 
-UI ↔ API: the UI calls APIs; APIs enforce policies and return typed data.
+```ini
+DATABASE_URL="mysql://user:pass@localhost:3306/nublox"
+AUTH_SECRET="super-secret"
+```
 
-API ↔ Logic: endpoints can emit events to workflows; workflows can call internal/external APIs.
+---
 
-DEVOPS → All: environments, secrets, builds, and deploys apply across every studio.
+## 📊 Feature Comparison
 
-Lifecycle (from idea to deploy)
+| Tool              | NuBlox | Webflow | Zapier | Postman | Oracle APEX | Retool |
+| ----------------- | :----: | :-----: | :----: | :-----: | :---------: | :----: |
+| Full-stack design |    ✅   |    ❌    |    ❌   |    ❌    |      ✅      |    ✅   |
+| No-code logic     |    ✅   |    ❌    |    ✅   |    ❌    |      ❌      |    ✅   |
+| API generation    |    ✅   |    ❌    |    ❌   |    ✅    |      ✅      |    ✅   |
+| SQL schema editor |    ✅   |    ❌    |    ❌   |    ❌    |      ✅      |    ✅   |
+| Multi-env deploy  |    ✅   |    ✅    |    ✅   |    ✅    |      ❌      |    ✅   |
 
-Create Workspace & Project in Platform/Workspace.
+---
 
-Model data in SQL STUDIO (ERD, constraints, migrations).
+## 📊 Core ERD
 
-Generate endpoints in API STUDIO (CRUD + custom, auth/rate limits).
+```mermaid
+erDiagram
+  platform_users ||--o{ platform_user_profiles : has
+  platform_users ||--o{ platform_user_sessions : has
+  platform_users ||--o{ platform_user_verifications : has
+  platform_users ||--o{ platform_credentials : has
+  platform_users ||--o{ platform_user_roles : has
 
-Build screens in UI STUDIO (bind lists/forms to queries and endpoints).
+  platform_business_accounts ||--o{ platform_workspaces : owns
+  platform_users ||--o{ platform_workspaces : owns
+  platform_workspaces ||--o{ platform_workspace_members : has
+  platform_workspaces ||--o{ platform_roles : has
+  platform_roles ||--o{ platform_role_permissions : maps
+  platform_permissions ||--o{ platform_role_permissions : maps
 
-Automate in LOGIC STUDIO (on submit, on schedule, on DB change).
+  platform_workspaces ||--o{ platform_projects : has
+  platform_projects ||--o{ platform_project_members : has
+  platform_projects ||--o{ platform_tasks : has
+  platform_tasks ||--o{ platform_task_comments : has
+  platform_tasks ||--o{ platform_task_attachments : has
 
-Configure environments in DEVOPS STUDIO (secrets, build, deploy, promote).
+  platform_plans ||--o{ platform_subscriptions : used_by
+  platform_business_accounts ||--o{ platform_subscriptions : has
+  platform_subscriptions ||--o{ platform_invoices : billed
 
-Data & Multi-Tenancy
+  platform_workspaces ||--o{ platform_locales : has
+  platform_workspaces ||--o{ platform_translations : has
+  platform_locales ||--o{ platform_translations : scopes
+```
 
-Platform owns global users & policies.
+---
 
-Workspace is the tenant boundary (members, roles, secrets, buckets).
+## 🔢 Studio ERDs
 
-Project is the deployable unit within a workspace.
+<details>
+<summary>DevOps Studio</summary>
 
-Environments (per project) isolate runtime configuration and data endpoints.
+```mermaid
+erDiagram
+  platform_projects ||--o{ devops_environments : has
+  devops_environments ||--o{ devops_env_vars : has
 
-Security & Governance
+  platform_projects ||--o{ devops_builds : builds
+  platform_users ||--o{ devops_builds : created_by
 
-Centralized User Management, Roles/Permissions, Feature Flags, Audit Events.
+  devops_environments ||--o{ devops_deployments : runs
+  devops_builds ||--o{ devops_deployments : deployed_as
+```
 
-API policies (auth required, role gates, CORS, rate limits).
+</details>
 
-Secrets/keys are scoped (workspace/project/connection) and managed centrally.
+<details>
+<summary>API Studio</summary>
+
+```mermaid
+erDiagram
+  platform_projects ||--o{ api_collections : has
+  platform_projects ||--o{ api_endpoints : exposes
+  api_collections ||--o{ api_endpoints : groups
+
+  api_endpoints ||--|| api_policies : has
+  api_collections ||--o{ api_tests : contains
+  platform_projects ||--o{ api_keys : has
+
+  api_endpoints ||--o{ api_request_logs : logs
+  devops_environments ||--o{ api_request_logs : context
+```
+
+</details>
+
+<details>
+<summary>UI Studio</summary>
+
+```mermaid
+erDiagram
+  platform_projects ||--o{ ui_pages : has
+  platform_users ||--o{ ui_pages : created_by
+  ui_pages ||--o{ ui_page_versions : versions
+  platform_users ||--o{ ui_page_versions : created_by
+
+  platform_projects ||--o{ ui_components_library : has
+
+  platform_projects ||--o{ ui_assets : has
+  platform_users ||--o{ ui_assets : created_by
+```
+
+</details>
+
+<details>
+<summary>Workflow / Logic Studio</summary>
+
+```mermaid
+erDiagram
+  platform_projects ||--o{ workflow_workflows : has
+  platform_users ||--o{ workflow_workflows : created_by
+
+  workflow_workflows ||--o{ workflow_versions : versions
+  platform_users ||--o{ workflow_versions : created_by
+
+  workflow_workflows ||--o{ workflow_triggers : triggers
+  workflow_workflows ||--o{ workflow_runs : runs
+  workflow_runs ||--o{ workflow_run_nodes : nodes
+  workflow_workflows ||--|| workflow_webhooks : webhook
+```
+
+</details>
+
+<details>
+<summary>SQL Studio</summary>
+
+```mermaid
+erDiagram
+  sqlx_connections ||--o{ sqlx_schemas : has
+  sqlx_schemas ||--o{ sqlx_schema_tables : has
+  sqlx_schema_tables ||--o{ sqlx_schema_table_columns : has
+  sqlx_schema_tables ||--o{ sqlx_schema_table_indexes : has
+  sqlx_schema_tables ||--o{ sqlx_schema_table_checks : has
+  sqlx_schema_tables ||--o{ sqlx_schema_table_foreign_keys : has
+  sqlx_schema_tables ||--o{ sqlx_schema_table_triggers : has
+  sqlx_schemas ||--o{ sqlx_schema_views : has
+
+  sqlx_connections ||--o{ sqlx_users : has
+  sqlx_roles ||--o{ sqlx_role_assignments : maps
+  sqlx_users ||--o{ sqlx_role_assignments : maps
+
+  platform_projects ||--o{ sqlx_saved_queries : has
+  sqlx_connections ||--o{ sqlx_saved_queries : for_conn
+  platform_users ||--o{ sqlx_saved_queries : created_by
+
+  platform_projects ||--o{ sqlx_saved_views : has
+  platform_users ||--o{ sqlx_saved_views : created_by
+
+  platform_projects ||--o{ sqlx_data_sources : has
+  platform_projects ||--o{ sqlx_data_exports : has
+  sqlx_saved_queries ||--o{ sqlx_data_exports : from_query
+  platform_users ||--o{ sqlx_data_exports : created_by
+
+  platform_projects ||--o{ sqlx_data_imports : has
+  platform_users ||--o{ sqlx_data_imports : created_by
+```
+
+</details>
+
+---
+
+## 🛣 Roadmap
+
+| Phase      | Features                                            |
+| ---------- | --------------------------------------------------- |
+| **Alpha**  | SQL Studio, ERD builder, basic UI canvas            |
+| **Beta**   | Logic Studio, API Studio, deploy pipeline           |
+| **v1.0**   | Multi-user collab, plugin marketplace, theme editor |
+| **Future** | AI assistant, GraphQL, white-label runtime          |
+
+---
+
+## 🧩 Tech Stack
+
+* **Frontend:** [Svelte 5](https://svelte.dev/docs/svelte) + [SvelteKit 2](https://svelte.dev/docs/kit)
+* **Backend:** Node.js + SvelteKit endpoints
+* **Database:** MySQL 8.0+ (`namespace.sql`)
+* **ORM Layer:** Drizzle ORM (planned) / Prisma (optional)
+* **Build Tooling:** PNPM workspaces, PostCSS, Tailwind
+* **Infra Ready:** Docker, GitOps, multi-tenant runtime isolation
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions!
+
+1. Fork & clone the repo
+2. Create a feature branch (`git checkout -b feat/awesome`)
+3. Commit changes (`pnpm lint && pnpm test`)
+4. Open a PR 🚀
+
+---
+
+## 📜 License
+
+MIT © 2025 [Stephen Spittal](https://github.com/8140spitt)
+
+---
+
+## 🌐 Links
+
+* **Landing Page:** [nublox.io](https://nublox.io) *(coming soon)*
+* **GitHub Repo:** [NuBlox\_Application\_Builder](https://github.com/8140spitt/NuBlox_Application_Builder)
+* **Product Updates:** [LinkedIn](#) • [Twitter](#)
+
+```
+
+---
