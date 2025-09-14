@@ -1,57 +1,54 @@
 {
   "name": "@nublox/design-system",
   "version": "1.0.1",
-  "private": true,
   "type": "module",
-  "sideEffects": true,
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE",
-    "package.json",
-    "css"
-  ],
-  "main": "dist/index.css",
-  "style": "dist/index.css",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.css",
-    "./css/nublox-design-system.css": "./css/nublox-design-system.css",
-    "./css/tokens.css": "./css/tokens.css",
-    "./css/base.css": "./css/base.css",
-    "./css/typography.css": "./css/typography.css",
-    "./css/scales.css": "./css/scales.css",
-    "./css/utilities.css": "./css/utilities.css",
-    "./css/components.css": "./css/components.css",
-    "./css/motion.css": "./css/motion.css",
-    "./css/themes.css": "./css/themes.css",
-    "./css/print.css": "./css/print.css",
-    "./tokens.json": "./dist/tokens.json",
-    "./api": {
+    ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./dist/index.css": "./dist/index.css",
+    "./theme-engine": {
+      "types": "./dist/theme-engine.d.ts",
+      "import": "./dist/theme-engine.js",
+      "require": "./dist/theme-engine.cjs"
+    },
+    "./palettes/palettes-multibrand": {
+      "types": "./dist/palettes/palettes-multibrand.d.ts",
+      "import": "./dist/palettes/palettes-multibrand.js",
+      "require": "./dist/palettes/palettes-multibrand.cjs"
     }
   },
+  "files": [
+    "dist",
+    "README.md",
+    "package.json"
+  ],
+  "sideEffects": false,
   "scripts": {
     "clean": "rm -rf dist",
     "tokens": "tsx scripts/generate-tokens.ts",
-    "build:css": "postcss \"src/**/*.css\" --base src --dir dist --config postcss.config.cjs",
-    "build:index": "postcss src/index.css -o dist/index.css --config postcss.config.cjs",
+    "build:css": "postcss \"src/**/*.css\" --base src --dir dist --config postcss.config.js",
+    "build:index": "postcss src/index.css -o dist/index.css --config postcss.config.js",
     "build:copy": "mkdir -p dist/tokens && cp -R src/tokens/* dist/tokens/ 2>/dev/null || true",
     "build:ts": "tsup src/index.ts src/palettes/palettes-multibrand.ts src/theme-engine.ts --dts --format esm,cjs --out-dir dist --clean",
     "build": "pnpm run clean && pnpm run tokens && pnpm run build:css && pnpm run build:index && pnpm run build:copy && pnpm run build:ts"
   },
   "devDependencies": {
-    "@types/node": "^22.7.5",
+    "@types/node": "^22.5.2",
     "autoprefixer": "^10.4.21",
-    "cssnano": "^6",
-    "postcss": "^8.5.6",
-    "postcss-cli": "^11.0.1",
+    "cssnano": "^7.1.1",
+    "postcss": "^8.4.47",
+    "postcss-cli": "^11.0.0",
     "postcss-import": "^16.1.1",
     "postcss-nesting": "^12.1.5",
-    "tsx": "^4.20.0",
+    "rimraf": "^6.0.1",
     "tsup": "^8.5.0",
+    "tsx": "^4.19.2",
     "typescript": "^5.9.2"
   }
 }

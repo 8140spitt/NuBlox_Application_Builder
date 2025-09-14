@@ -29,7 +29,7 @@ type PoolOps = {
 const asConn = (c: PoolConnection) => c as unknown as ConnOps;
 const asPool = (p: Pool) => p as unknown as PoolOps;
 
-/* Capabilities */
+/* Capabilities (conservative base; runtime refined in client.capabilities()) */
 export const mysqlCapabilities: CapabilityMatrix = {
   ddl: {
     createTable: true,
@@ -46,8 +46,8 @@ export const mysqlCapabilities: CapabilityMatrix = {
   dml: {
     upsert: 'on_duplicate',
     returning: false,
-    ctes: true,
-    windowFunctions: true
+    ctes: false,            // refined to true on 8.0+
+    windowFunctions: false  // refined to true on 8.0+
   },
   dcl: {
     users: true,
@@ -64,9 +64,9 @@ export const mysqlCapabilities: CapabilityMatrix = {
     explain: true,
     analyze: true,
     serverCursors: false,
-    jsonNative: true,
+    jsonNative: false,      // refined to true on 5.7+
     fullTextSearch: true,
-    generatedColumns: true
+    generatedColumns: false // refined to true on 5.7+
   }
 };
 
@@ -247,10 +247,10 @@ class MySQLClient implements SQLClient {
     }
   }
   async close(): Promise<void> { await asPool(this.#pool).end(); }
+
   async capabilities(): Promise<CapabilityMatrix> {
     if (this.#caps) return this.#caps;
     try {
-      // server info
       const [rows] = await asPool(this.#pool).query(
         "SELECT @@version AS v, @@version_comment AS c, @@character_set_server AS cs"
       );
@@ -263,7 +263,6 @@ class MySQLClient implements SQLClient {
       const atLeast = (M: number, m: number, p = 0) =>
         major > M || (major === M && (minor > m || (minor === m && patch >= p)));
 
-      // start from your static mysqlCapabilities, then refine per version
       const caps: CapabilityMatrix = JSON.parse(JSON.stringify(mysqlCapabilities));
       caps.dml.ctes = atLeast(8, 0);
       caps.dml.windowFunctions = atLeast(8, 0);
@@ -273,11 +272,10 @@ class MySQLClient implements SQLClient {
 
       this.#caps = caps;
     } catch {
-      this.#caps = mysqlCapabilities; // fallback
+      this.#caps = mysqlCapabilities;
     }
     return this.#caps!;
   }
-
 }
 
 /* Builders */
@@ -291,7 +289,21 @@ class MySQLDDL implements DDLBuilder {
       if (c.isUnsigned) parts.push('UNSIGNED');
       if (c.isAutoIncrement) parts.push('AUTO_INCREMENT');
       if (c.nullable === 'not_null') parts.push('NOT NULL'); else parts.push('NULL');
-      if (c.defaultExpr != null) parts.push(`DEFAULT ${c.defaultExpr}`);
+
+      // Computed (generated) columns
+      if (c.computedExpr) {
+        parts.push(`AS (${c.computedExpr}) ${c.computedStored ? 'STORED' : 'VIRTUAL'}`);
+      } else {
+        // Defaults: prefer param-safe defaultValue, else raw defaultExpr
+        if (c.defaultExpr != null) {
+          parts.push(`DEFAULT ${c.defaultExpr}`);
+        } else if (c.defaultValue !== undefined) {
+          parts.push(`DEFAULT ${sqlLiteral(c.defaultValue)}`);
+        }
+      }
+
+      if (c.comment) parts.push(`COMMENT ${sqlString(c.comment)}`);
+
       return parts.join(' ');
     });
 
@@ -324,9 +336,13 @@ class MySQLDDL implements DDLBuilder {
     const tableComment = (opts as any).tableComment != null
       ? ` COMMENT=${sqlString(String((opts as any).tableComment))}`
       : '';
-    const engine = (opts as any).vendor?.engine ? ` ENGINE=${String((opts as any).vendor.engine)}` : ' ENGINE=InnoDB';
+    const engine = (opts as any).engine
+      ? ` ENGINE=${String((opts as any).engine)}`
+      : ' ENGINE=InnoDB';
+    const charset = (opts as any).charset ?? 'utf8mb4';
+    const collate = (opts as any).collate ?? 'utf8mb4_0900_ai_ci';
 
-    return `CREATE TABLE ${ifne}${qname} (\n  ${cols.join(',\n  ')}\n)${engine}${tableComment} DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;`;
+    return `CREATE TABLE ${ifne}${qname} (\n  ${cols.join(',\n  ')}\n)${engine}${tableComment} DEFAULT CHARSET=${charset} COLLATE=${collate};`;
   }
 
   alterTable(ident: TableIdent, cmd: AlterTableCommand): string[] {
@@ -339,7 +355,16 @@ class MySQLDDL implements DDLBuilder {
         if (c.isUnsigned) def.push('UNSIGNED');
         if (c.isAutoIncrement) def.push('AUTO_INCREMENT');
         if (c.nullable === 'not_null') def.push('NOT NULL'); else def.push('NULL');
-        if (c.defaultExpr != null) def.push(`DEFAULT ${c.defaultExpr}`);
+
+        if (c.computedExpr) {
+          def.push(`AS (${c.computedExpr}) ${c.computedStored ? 'STORED' : 'VIRTUAL'}`);
+        } else {
+          if (c.defaultExpr != null) def.push(`DEFAULT ${c.defaultExpr}`);
+          else if (c.defaultValue !== undefined) def.push(`DEFAULT ${sqlLiteral(c.defaultValue)}`);
+        }
+
+        if (c.comment) def.push(`COMMENT ${sqlString(c.comment)}`);
+
         statements.push(`ALTER TABLE ${qname} ADD COLUMN ${def.join(' ')};`);
       }
     }
@@ -432,12 +457,15 @@ class MySQLDDL implements DDLBuilder {
 }
 
 class MySQLDML implements DMLBuilder {
-  upsert(ident: TableIdent, row: RowObject, conflictKeys: string[], returning?: string[]): string {
+  upsert(ident: TableIdent, row: RowObject, conflictKeys: string[], _returning?: string[]): string {
     const cols = Object.keys(row);
     const qname = renderQualified(ident);
     const colList = cols.map(quoteIdent).join(', ');
     const values = cols.map(() => '?').join(', ');
-    const updates = cols.filter(c => !conflictKeys.includes(c)).map(c => `${quoteIdent(c)}=VALUES(${quoteIdent(c)})`).join(', ');
+    const updates = cols
+      .filter(c => !conflictKeys.includes(c))
+      .map(c => `${quoteIdent(c)}=VALUES(${quoteIdent(c)})`)
+      .join(', ');
     return `INSERT INTO ${qname} (${colList}) VALUES (${values}) ON DUPLICATE KEY UPDATE ${updates};`;
   }
 }

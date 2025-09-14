@@ -5,7 +5,7 @@ import mysql from 'mysql2/promise';
 import { SQLError } from '../core/types.js';
 const asConn = (c) => c;
 const asPool = (p) => p;
-/* Capabilities */
+/* Capabilities (conservative base; runtime refined in client.capabilities()) */
 export const mysqlCapabilities = {
     ddl: {
         createTable: true,
@@ -22,8 +22,8 @@ export const mysqlCapabilities = {
     dml: {
         upsert: 'on_duplicate',
         returning: false,
-        ctes: true,
-        windowFunctions: true
+        ctes: false, // refined to true on 8.0+
+        windowFunctions: false // refined to true on 8.0+
     },
     dcl: {
         users: true,
@@ -40,9 +40,9 @@ export const mysqlCapabilities = {
         explain: true,
         analyze: true,
         serverCursors: false,
-        jsonNative: true,
+        jsonNative: false, // refined to true on 5.7+
         fullTextSearch: true,
-        generatedColumns: true
+        generatedColumns: false // refined to true on 5.7+
     }
 };
 /* Utils */
@@ -67,6 +67,25 @@ function mapIsolation(lvl) {
         case 'serializable': return 'SERIALIZABLE';
         default: return 'REPEATABLE READ';
     }
+}
+function sqlLiteral(v) {
+    if (v === null || v === undefined)
+        return 'NULL';
+    if (v instanceof Date) {
+        const pad = (n) => String(n).padStart(2, '0');
+        const y = v.getFullYear();
+        const m = pad(v.getMonth() + 1);
+        const d = pad(v.getDate());
+        const hh = pad(v.getHours());
+        const mm = pad(v.getMinutes());
+        const ss = pad(v.getSeconds());
+        return `'${y}-${m}-${d} ${hh}:${mm}:${ss}'`;
+    }
+    if (typeof v === 'number')
+        return String(v);
+    if (typeof v === 'boolean')
+        return v ? 'TRUE' : 'FALSE';
+    return `'${String(v).replace(/'/g, "''")}'`;
 }
 /* Prepared Statement */
 class MySQLPrepared {
@@ -146,6 +165,7 @@ class MySQLTx {
 class MySQLClient {
     dialect = 'mysql';
     #pool;
+    #caps;
     constructor(pool) { this.#pool = pool; }
     async query(sql, params = [], options) {
         const t0 = nowMs();
@@ -219,6 +239,31 @@ class MySQLClient {
         }
     }
     async close() { await asPool(this.#pool).end(); }
+    async capabilities() {
+        if (this.#caps)
+            return this.#caps;
+        try {
+            const [rows] = await asPool(this.#pool).query("SELECT @@version AS v, @@version_comment AS c, @@character_set_server AS cs");
+            const info = Array.isArray(rows) ? rows[0] : rows;
+            const vstr = String(info?.v ?? '8.0.0');
+            const m = vstr.match(/^(\d+)\.(\d+)\.(\d+)/);
+            const major = m ? parseInt(m[1], 10) : 8;
+            const minor = m ? parseInt(m[2], 10) : 0;
+            const patch = m ? parseInt(m[3], 10) : 0;
+            const atLeast = (M, m, p = 0) => major > M || (major === M && (minor > m || (minor === m && patch >= p)));
+            const caps = JSON.parse(JSON.stringify(mysqlCapabilities));
+            caps.dml.ctes = atLeast(8, 0);
+            caps.dml.windowFunctions = atLeast(8, 0);
+            caps.misc.jsonNative = atLeast(5, 7);
+            caps.misc.generatedColumns = atLeast(5, 7);
+            caps.misc.checkConstraintsEnforced = atLeast(8, 0, 16);
+            this.#caps = caps;
+        }
+        catch {
+            this.#caps = mysqlCapabilities;
+        }
+        return this.#caps;
+    }
 }
 /* Builders */
 class MySQLDDL {
@@ -235,8 +280,21 @@ class MySQLDDL {
                 parts.push('NOT NULL');
             else
                 parts.push('NULL');
-            if (c.defaultExpr != null)
-                parts.push(`DEFAULT ${c.defaultExpr}`);
+            // Computed (generated) columns
+            if (c.computedExpr) {
+                parts.push(`AS (${c.computedExpr}) ${c.computedStored ? 'STORED' : 'VIRTUAL'}`);
+            }
+            else {
+                // Defaults: prefer param-safe defaultValue, else raw defaultExpr
+                if (c.defaultExpr != null) {
+                    parts.push(`DEFAULT ${c.defaultExpr}`);
+                }
+                else if (c.defaultValue !== undefined) {
+                    parts.push(`DEFAULT ${sqlLiteral(c.defaultValue)}`);
+                }
+            }
+            if (c.comment)
+                parts.push(`COMMENT ${sqlString(c.comment)}`);
             return parts.join(' ');
         });
         if (def.primaryKey?.columns?.length) {
@@ -268,8 +326,12 @@ class MySQLDDL {
         const tableComment = opts.tableComment != null
             ? ` COMMENT=${sqlString(String(opts.tableComment))}`
             : '';
-        const engine = opts.vendor?.engine ? ` ENGINE=${String(opts.vendor.engine)}` : ' ENGINE=InnoDB';
-        return `CREATE TABLE ${ifne}${qname} (\n  ${cols.join(',\n  ')}\n)${engine}${tableComment} DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;`;
+        const engine = opts.engine
+            ? ` ENGINE=${String(opts.engine)}`
+            : ' ENGINE=InnoDB';
+        const charset = opts.charset ?? 'utf8mb4';
+        const collate = opts.collate ?? 'utf8mb4_0900_ai_ci';
+        return `CREATE TABLE ${ifne}${qname} (\n  ${cols.join(',\n  ')}\n)${engine}${tableComment} DEFAULT CHARSET=${charset} COLLATE=${collate};`;
     }
     alterTable(ident, cmd) {
         const qname = renderQualified(ident);
@@ -285,8 +347,17 @@ class MySQLDDL {
                     def.push('NOT NULL');
                 else
                     def.push('NULL');
-                if (c.defaultExpr != null)
-                    def.push(`DEFAULT ${c.defaultExpr}`);
+                if (c.computedExpr) {
+                    def.push(`AS (${c.computedExpr}) ${c.computedStored ? 'STORED' : 'VIRTUAL'}`);
+                }
+                else {
+                    if (c.defaultExpr != null)
+                        def.push(`DEFAULT ${c.defaultExpr}`);
+                    else if (c.defaultValue !== undefined)
+                        def.push(`DEFAULT ${sqlLiteral(c.defaultValue)}`);
+                }
+                if (c.comment)
+                    def.push(`COMMENT ${sqlString(c.comment)}`);
                 statements.push(`ALTER TABLE ${qname} ADD COLUMN ${def.join(' ')};`);
             }
         }
@@ -396,12 +467,15 @@ class MySQLDDL {
     }
 }
 class MySQLDML {
-    upsert(ident, row, conflictKeys, returning) {
+    upsert(ident, row, conflictKeys, _returning) {
         const cols = Object.keys(row);
         const qname = renderQualified(ident);
         const colList = cols.map(quoteIdent).join(', ');
         const values = cols.map(() => '?').join(', ');
-        const updates = cols.filter(c => !conflictKeys.includes(c)).map(c => `${quoteIdent(c)}=VALUES(${quoteIdent(c)})`).join(', ');
+        const updates = cols
+            .filter(c => !conflictKeys.includes(c))
+            .map(c => `${quoteIdent(c)}=VALUES(${quoteIdent(c)})`)
+            .join(', ');
         return `INSERT INTO ${qname} (${colList}) VALUES (${values}) ON DUPLICATE KEY UPDATE ${updates};`;
     }
 }

@@ -59,6 +59,7 @@ export interface SQLClient {
     }): Promise<T>;
     prepare(sql: string): Promise<PreparedStatement>;
     stream<T = RowObject>(sql: string, params?: SQLParams, options?: QueryOptions): AsyncIterable<T>;
+    capabilities(): Promise<CapabilityMatrix>;
     close(): Promise<void>;
 }
 export interface SchemaIdent {
@@ -82,6 +83,9 @@ export interface ColumnDef {
     isUnique?: boolean;
     ordinalPosition?: number | null;
     comment?: string | null;
+    defaultValue?: SQLValue | null;
+    computedExpr?: string | null;
+    computedStored?: boolean;
 }
 export interface PrimaryKey {
     name?: string | null;

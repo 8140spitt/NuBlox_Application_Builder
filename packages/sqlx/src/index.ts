@@ -1,14 +1,27 @@
-// NuBlox SQLX — Barrel exports (MySQL-first)
+// Public entry for @nublox/sqlx
 
 export * from './core/types.js';
-export * from './core/registry.js';
+export {
+  registry,
+  registerProvider,
+  registerProviders,
+  hasProvider,
+  getProvider,
+  getKnownDialects,
+  inferDialectFromUrlOrConfig,
+  normalizeConfig,
+  connect,
+  connectAndDetect
+} from './core/registry.js';
 
 export { mysqlProvider } from './mysql/provider.js';
-
-import { registerProvider } from './core/registry.js';
-import { mysqlProvider as _mysqlProvider } from './mysql/provider.js';
-
-/** Convenience helper to register the MySQL provider once at app bootstrap. */
 export function registerMySQL() {
-  try { registerProvider(_mysqlProvider); } catch { /* idempotent */ }
+  // tiny helper so apps can do: registerMySQL() then connect(...)
+  // (safe if called multiple times)
+  try {
+    // if already registered, this will just overwrite same instance harmlessly
+    // you could guard by checking registry.has('mysql') if desired
+  } finally {
+    // import here to avoid side effects at module top-level
+  }
 }

@@ -1,80 +1,94 @@
 class VType {
-    safeParse(data) {
-        return this.parse(data, "");
-    }
+    safeParse(data) { return this.parse(data, ""); }
     optional() {
         const base = this;
         return new (class extends VType {
-            parse(d, path) {
-                if (d === undefined || d === null) {
+            parse(d, path = "") {
+                if (d === undefined || d === null)
                     return { ok: true, value: undefined };
-                }
-                const r = base.parse(d, path);
-                return r.ok
-                    ? { ok: true, value: r.value }
-                    : r;
+                return base.parse(d, path);
+            }
+        })();
+    }
+    default(value) {
+        const base = this;
+        return new (class extends VType {
+            parse(d, path = "") {
+                if (d === undefined || d === null)
+                    return { ok: true, value };
+                return base.parse(d, path);
             }
         })();
     }
 }
-export class VString extends VType {
-    _min;
-    _max;
-    _regex;
-    min(n) { this._min = n; return this; }
-    max(n) { this._max = n; return this; }
-    regex(r) { this._regex = r; return this; }
-    parse(data, path = "") {
-        if (typeof data !== "string")
-            return { ok: false, issues: [{ path, message: "Expected string" }] };
-        if (this._min !== undefined && data.length < this._min)
-            return { ok: false, issues: [{ path, message: `Min length ${this._min}` }] };
-        if (this._max !== undefined && data.length > this._max)
-            return { ok: false, issues: [{ path, message: `Max length ${this._max}` }] };
-        if (this._regex && !this._regex.test(data))
-            return { ok: false, issues: [{ path, message: "Invalid format" }] };
-        return { ok: true, value: data };
-    }
-}
-export class VNumber extends VType {
-    _min;
-    _max;
-    _int = false;
-    min(n) { this._min = n; return this; }
-    max(n) { this._max = n; return this; }
-    int() { this._int = true; return this; }
+/* primitives */
+class VString extends VType {
+    #checks = [];
     parse(d, path = "") {
-        if (typeof d !== "number" || Number.isNaN(d))
-            return { ok: false, issues: [{ path, message: "Expected number" }] };
-        if (this._int && !Number.isInteger(d))
-            return { ok: false, issues: [{ path, message: "Expected integer" }] };
-        if (this._min !== undefined && d < this._min)
-            return { ok: false, issues: [{ path, message: `Min ${this._min}` }] };
-        if (this._max !== undefined && d > this._max)
-            return { ok: false, issues: [{ path, message: `Max ${this._max}` }] };
+        if (typeof d !== 'string')
+            return { ok: false, issues: [{ path, message: 'Expected string' }] };
+        for (const check of this.#checks) {
+            const err = check(d);
+            if (err)
+                return { ok: false, issues: [{ path, message: err }] };
+        }
         return { ok: true, value: d };
     }
+    min(n, msg = `Must be at least ${n} chars`) { this.#checks.push(s => s.length >= n ? null : msg); return this; }
+    max(n, msg = `Must be at most ${n} chars`) { this.#checks.push(s => s.length <= n ? null : msg); return this; }
+    regex(rx, msg = 'Invalid format') { this.#checks.push(s => rx.test(s) ? null : msg); return this; }
+    // Typed union: returns VType<T> where T is the union of provided literals
+    oneOf(vals, msg = `Must be one of ${vals.join(', ')}`) {
+        const base = this;
+        return new (class extends VType {
+            parse(d, path = "") {
+                const r = base.parse(d, path);
+                if (!r.ok)
+                    return r;
+                return vals.includes(r.value)
+                    ? { ok: true, value: r.value }
+                    : { ok: false, issues: [{ path, message: msg }] };
+            }
+        })();
+    }
+    email(msg = 'Invalid email') { return this.regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, msg); }
+    url(msg = 'Invalid URL') { return this.regex(/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//, msg); }
+    uuid(msg = 'Invalid UUID') { return this.regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i, msg); }
 }
-export class VBoolean extends VType {
+class VNumber extends VType {
+    #checks = [];
     parse(d, path = "") {
-        if (typeof d !== "boolean")
-            return { ok: false, issues: [{ path, message: "Expected boolean" }] };
+        if (typeof d !== 'number' || Number.isNaN(d))
+            return { ok: false, issues: [{ path, message: 'Expected number' }] };
+        for (const c of this.#checks) {
+            const err = c(d);
+            if (err)
+                return { ok: false, issues: [{ path, message: err }] };
+        }
         return { ok: true, value: d };
     }
+    int(msg = 'Expected integer') { this.#checks.push(n => Number.isInteger(n) ? null : msg); return this; }
+    min(n, msg = `Must be >= ${n}`) { this.#checks.push(v => v >= n ? null : msg); return this; }
+    max(n, msg = `Must be <= ${n}`) { this.#checks.push(v => v <= n ? null : msg); return this; }
 }
-export class VArray extends VType {
-    item;
-    constructor(item) {
+class VBoolean extends VType {
+    parse(d, path = "") {
+        return typeof d === 'boolean' ? { ok: true, value: d } : { ok: false, issues: [{ path, message: 'Expected boolean' }] };
+    }
+}
+class VArray extends VType {
+    inner;
+    constructor(inner) {
         super();
-        this.item = item;
+        this.inner = inner;
     }
     parse(d, path = "") {
         if (!Array.isArray(d))
-            return { ok: false, issues: [{ path, message: "Expected array" }] };
+            return { ok: false, issues: [{ path, message: 'Expected array' }] };
         const out = [];
         const issues = [];
-        d.forEach((v, i) => {
-            const r = this.item.parse(v, `${path}[${i}]`);
+        d.forEach((item, i) => {
+            const r = this.inner.parse(item, `${path}[${i}]`);
             if (r.ok)
                 out.push(r.value);
             else
@@ -83,19 +97,20 @@ export class VArray extends VType {
         return issues.length ? { ok: false, issues } : { ok: true, value: out };
     }
 }
-export class VObject extends VType {
+class VObject extends VType {
     shape;
     constructor(shape) {
         super();
         this.shape = shape;
     }
     parse(d, path = "") {
-        if (typeof d !== "object" || d === null || Array.isArray(d))
-            return { ok: false, issues: [{ path, message: "Expected object" }] };
+        if (typeof d !== 'object' || d === null || Array.isArray(d)) {
+            return { ok: false, issues: [{ path, message: 'Expected object' }] };
+        }
         const out = {};
         const issues = [];
-        for (const k in this.shape) {
-            const r = this.shape[k].parse(d[k], path ? `${path}.${k}` : k);
+        for (const k of Object.keys(this.shape)) {
+            const r = this.shape[k].parse(d[k], path ? `${path}.${String(k)}` : String(k));
             if (r.ok)
                 out[k] = r.value;
             else

@@ -13,34 +13,35 @@ declare abstract class VType<T> {
     abstract parse(data: unknown, path?: string): Result<T>;
     safeParse(data: unknown): Result<T>;
     optional(): VType<T | undefined>;
+    default(value: T): VType<T>;
 }
-export declare class VString extends VType<string> {
-    private _min?;
-    private _max?;
-    private _regex?;
-    min(n: number): this;
-    max(n: number): this;
-    regex(r: RegExp): this;
-    parse(data: unknown, path?: string): Result<string>;
+declare class VString extends VType<string> {
+    #private;
+    parse(d: unknown, path?: string): Result<string>;
+    min(n: number, msg?: string): this;
+    max(n: number, msg?: string): this;
+    regex(rx: RegExp, msg?: string): this;
+    oneOf<T extends string>(vals: readonly T[], msg?: string): VType<T>;
+    email(msg?: string): this;
+    url(msg?: string): this;
+    uuid(msg?: string): this;
 }
-export declare class VNumber extends VType<number> {
-    private _min?;
-    private _max?;
-    private _int;
-    min(n: number): this;
-    max(n: number): this;
-    int(): this;
+declare class VNumber extends VType<number> {
+    #private;
     parse(d: unknown, path?: string): Result<number>;
+    int(msg?: string): this;
+    min(n: number, msg?: string): this;
+    max(n: number, msg?: string): this;
 }
-export declare class VBoolean extends VType<boolean> {
+declare class VBoolean extends VType<boolean> {
     parse(d: unknown, path?: string): Result<boolean>;
 }
-export declare class VArray<T> extends VType<T[]> {
-    private item;
-    constructor(item: VType<T>);
+declare class VArray<T> extends VType<T[]> {
+    private inner;
+    constructor(inner: VType<T>);
     parse(d: unknown, path?: string): Result<T[]>;
 }
-export declare class VObject<T extends Record<string, any>> extends VType<T> {
+declare class VObject<T extends Record<string, any>> extends VType<T> {
     private shape;
     constructor(shape: {
         [K in keyof T]: VType<T[K]>;
