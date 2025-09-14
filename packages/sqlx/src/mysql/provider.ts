@@ -92,6 +92,22 @@ function mapIsolation(lvl: IsolationLevel): string {
     default: return 'REPEATABLE READ';
   }
 }
+function sqlLiteral(v: any): string {
+  if (v === null || v === undefined) return 'NULL';
+  if (v instanceof Date) {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const y = v.getFullYear();
+    const m = pad(v.getMonth() + 1);
+    const d = pad(v.getDate());
+    const hh = pad(v.getHours());
+    const mm = pad(v.getMinutes());
+    const ss = pad(v.getSeconds());
+    return `'${y}-${m}-${d} ${hh}:${mm}:${ss}'`;
+  }
+  if (typeof v === 'number') return String(v);
+  if (typeof v === 'boolean') return v ? 'TRUE' : 'FALSE';
+  return `'${String(v).replace(/'/g, "''")}'`;
+}
 
 /* Prepared Statement */
 class MySQLPrepared implements PreparedStatement {
@@ -166,6 +182,8 @@ class MySQLTx implements SQLTransaction {
 class MySQLClient implements SQLClient {
   readonly dialect: SQLDialect = 'mysql';
   #pool: Pool;
+  #caps?: CapabilityMatrix;
+
   constructor(pool: Pool) { this.#pool = pool; }
 
   async query<T = RowObject>(sql: string, params: SQLParams = [], options?: QueryOptions): Promise<QueryResult<T>> {
@@ -229,6 +247,37 @@ class MySQLClient implements SQLClient {
     }
   }
   async close(): Promise<void> { await asPool(this.#pool).end(); }
+  async capabilities(): Promise<CapabilityMatrix> {
+    if (this.#caps) return this.#caps;
+    try {
+      // server info
+      const [rows] = await asPool(this.#pool).query(
+        "SELECT @@version AS v, @@version_comment AS c, @@character_set_server AS cs"
+      );
+      const info: any = Array.isArray(rows) ? rows[0] : rows;
+      const vstr = String(info?.v ?? '8.0.0');
+      const m = vstr.match(/^(\d+)\.(\d+)\.(\d+)/);
+      const major = m ? parseInt(m[1], 10) : 8;
+      const minor = m ? parseInt(m[2], 10) : 0;
+      const patch = m ? parseInt(m[3], 10) : 0;
+      const atLeast = (M: number, m: number, p = 0) =>
+        major > M || (major === M && (minor > m || (minor === m && patch >= p)));
+
+      // start from your static mysqlCapabilities, then refine per version
+      const caps: CapabilityMatrix = JSON.parse(JSON.stringify(mysqlCapabilities));
+      caps.dml.ctes = atLeast(8, 0);
+      caps.dml.windowFunctions = atLeast(8, 0);
+      caps.misc.jsonNative = atLeast(5, 7);
+      caps.misc.generatedColumns = atLeast(5, 7);
+      (caps.misc as any).checkConstraintsEnforced = atLeast(8, 0, 16);
+
+      this.#caps = caps;
+    } catch {
+      this.#caps = mysqlCapabilities; // fallback
+    }
+    return this.#caps!;
+  }
+
 }
 
 /* Builders */
